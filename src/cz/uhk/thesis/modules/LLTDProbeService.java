@@ -90,7 +90,7 @@ public class LLTDProbeService implements ProbeService {
             state_r += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_r);
             state_r += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_r);
             if(state_r == Pcap.OK) {
-                Logger.Log2Console(this, "LLTD Reset QD Packet (3) odeslán");
+                Logger.Log2Console(probe.GetModuleName(), "LLTD Reset QD Packet (3) odeslán");
             }
 
 
@@ -98,7 +98,7 @@ public class LLTDProbeService implements ProbeService {
             int state_qd = Pcap.OK;
             state_qd += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_qd);
             if(state_qd == Pcap.OK) {
-                Logger.Log2Console(this, "LLTD Discovery Packet (1) odeslán");
+                Logger.Log2Console(probe.GetModuleName(), "LLTD Discovery Packet (1) odeslán");
             }
 
         }
