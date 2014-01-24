@@ -1,5 +1,9 @@
 
-zdrojové kódy diplomová práce Univerzity Hradec Králové
+Source code of diploma thesis at the Univerzity of Hradec Králové
 
-- pro spusteni je potreba nainstalovany winpcap a Java 32bit
-- vygenerovane device-list.txt odesilat prosim autorovi projektu
+Minimal requirements:
+- installed Java 32bit version (because of 32bit version network jar library)
+- allowed sharing on firewall
+- allowed network discovery and network in private state
+
+Please, send generated logs (device-list.txt) to author. Thank You.
