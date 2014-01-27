@@ -1,6 +1,7 @@
 
 package cz.uhk.thesis.model;
 
+import cz.uhk.thesis.core.Logger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.jnetpcap.packet.format.FormatUtils;
@@ -14,15 +15,21 @@ public class LltdHelloSubHeaderParser implements Parser {
     public static final int OFFSET_SUBHEADER_HELLO = 46;
     
     public static final byte TYPE_HOST_ID = 0x01;
+    public static final byte TYPE_CHARACTERISTICS = 0x02;
     public static final byte TYPE_PHYSICAL_MEDIUM = 0x03;
     public static final byte TYPE_WIRELESS_MODE = 0x04;
+    public static final byte TYPE_BSSID = 0x05;
+    public static final byte TYPE_SSID = 0x06;
     public static final byte TYPE_IPV4 = 0x07;
     public static final byte TYPE_IPV6 = 0x08;
     public static final byte TYPE_LINK_SPEED = 0x0c;
     
     public static final byte LEN_HOST_ID = 0x06;
+    public static final byte LEN_CHARACTERISTICS = 0x02;
     public static final byte LEN_PHYSICAL_MEDIUM = 0x04;
     public static final byte LEN_WIRELESS_MODE = 0x01;
+    public static final byte LEN_BSSID = 0x06;
+//    public static final byte LEN_SSID = 0x00; VARIABLE LENGTH
     public static final byte LEN_IPV4 = 0x04;
     public static final byte LEN_IPV6 = 0x10;
     public static final byte LEN_LINK_SPEED = 0x04;
@@ -40,7 +47,7 @@ public class LltdHelloSubHeaderParser implements Parser {
     public LltdHelloSubHeaderParser(byte[] data)
     {
         this.headerData = data;
-        parse();
+        parse(0);
     }
     
     /**
@@ -124,48 +131,54 @@ public class LltdHelloSubHeaderParser implements Parser {
      */
     public String getLinkSpeed()
     {
-        return String.valueOf(ByteBuffer.wrap(bLinkSpeed).getInt()/1000000) + " Mbit";
+        return String.valueOf(ByteBuffer.wrap(bLinkSpeed).getInt()/1_00_00) + " Mbit";
     }
     
-    private void parse()
+    private void parse(int pointer)
     {
-        // Logger.Log2Hex(headerData);
+        byte type = headerData[pointer];
+        byte length = headerData[pointer+1];
         
-        byte bActualBlock = 0x00; // safe data reading
-        
-        for (int i = 0; i < headerData.length; i++) {
-            
-            if(headerData[i] == TYPE_HOST_ID && headerData[i+1] == LEN_HOST_ID && bActualBlock < TYPE_HOST_ID) {
-                bMac = Arrays.copyOfRange(headerData, 2+i, 2+i+LEN_HOST_ID);
-                bActualBlock = TYPE_HOST_ID;
+        switch(type) {
+            case TYPE_HOST_ID: {
+                bMac = Arrays.copyOfRange(headerData, 2+pointer, 2+pointer+length);
+            } break;
+            case TYPE_WIRELESS_MODE: {
+                bWirelessMode = headerData[2+pointer];
+            } break;
+            case TYPE_PHYSICAL_MEDIUM: {
+                bPhysicalMedium = headerData[2+pointer];
+            } break;
+            case TYPE_IPV4: {
+                bIpv4 = Arrays.copyOfRange(headerData, 2+pointer, 2+pointer+length);
+            } break;
+            case TYPE_IPV6: {
+                bIpv6 = Arrays.copyOfRange(headerData, 2+pointer, 2+pointer+length);
+            } break;
+            case TYPE_LINK_SPEED: {
+                bLinkSpeed = Arrays.copyOfRange(headerData, 2+pointer,2+pointer+length);
+            } break;
+            case TYPE_CHARACTERISTICS: {
+                // TODO:
+            } break;
+            case TYPE_BSSID: {
+                // TODO:
+            } break;
+            case TYPE_SSID: {
+                // TODO:
+            } break;
+            default: {
+                Logger.Log2Console(this, "neznamy typ, koncim");
+                return;
             }
-            
-            if(headerData[i] == TYPE_PHYSICAL_MEDIUM && headerData[i+1] == LEN_PHYSICAL_MEDIUM && bActualBlock < TYPE_PHYSICAL_MEDIUM) {
-                bPhysicalMedium = headerData[1+i+LEN_PHYSICAL_MEDIUM];
-                bActualBlock = TYPE_PHYSICAL_MEDIUM;
-            }
-            
-            if(headerData[i] == TYPE_WIRELESS_MODE && headerData[i+1] == LEN_WIRELESS_MODE && bActualBlock < TYPE_WIRELESS_MODE) {
-                bWirelessMode = headerData[1+i+LEN_WIRELESS_MODE];
-                bActualBlock = TYPE_WIRELESS_MODE;
-            }
-            
-            if(headerData[i] == TYPE_IPV4 && headerData[i+1] == LEN_IPV4 && bActualBlock < TYPE_IPV4) {
-                bIpv4 = Arrays.copyOfRange(headerData, 2+i, 2+i+LEN_IPV4);
-                bActualBlock = TYPE_IPV4;
-            }
-            
-            if(headerData[i] == TYPE_IPV6 && headerData[i+1] == LEN_IPV6 && bActualBlock < TYPE_IPV6) {
-                bIpv6 = Arrays.copyOfRange(headerData, 2+i, 2+i+LEN_IPV6);
-                bActualBlock = TYPE_IPV6;
-            }
-            
-            if(headerData[i] == TYPE_LINK_SPEED && headerData[i+1] == LEN_LINK_SPEED && bActualBlock < TYPE_LINK_SPEED) {
-                bLinkSpeed = Arrays.copyOfRange(headerData, 2+i, 2+i+LEN_LINK_SPEED);
-                bActualBlock = TYPE_LINK_SPEED;
-            }
-            
         }
+        
+        int pointerNext = (2+pointer+length);
+        
+        if(headerData.length > pointerNext) { 
+            parse(pointerNext);
+        }
+        
     }
     
 }
