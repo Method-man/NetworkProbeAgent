@@ -9,6 +9,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.List;
 import org.jnetpcap.packet.JPacket;
+import org.jnetpcap.packet.format.FormatUtils;
 
 /**
  * Static access to logable outputs
@@ -43,6 +44,8 @@ public class Logger {
      */
     public static void Log2Console(Object object, String output)
     {
+        // TODO: log to file
+        
         String whoCalls;
         if(object instanceof String) {
             whoCalls = (String) object;
@@ -60,6 +63,8 @@ public class Logger {
      */
     public static void Log2ConsoleError(Object object, Exception exceptionMessage)
     {
+        // TODO: log to file
+        
         System.out.println("EXCEPTION: " + exceptionMessage.getMessage());
     }
     
@@ -88,6 +93,8 @@ public class Logger {
             for(byte b: (byte[])o)
             sb.append(" "+String.format("%02x", b&0xff));
             System.out.println(sb);
+        } else if(o instanceof Byte) {
+            System.out.println(FormatUtils.toHexString((byte) o));
         } else {
             System.out.println("unsuported hex input");
         }

@@ -47,6 +47,8 @@ public class ArpProbe implements Probe {
 
     }
 
+    // TODO: getCore odmazat kdyz uz to mam v konstruktoru
+    
     @Override
     public Core getCore() {
         return core;

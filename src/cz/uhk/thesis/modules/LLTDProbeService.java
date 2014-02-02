@@ -56,6 +56,8 @@ public class LLTDProbeService implements ProbeService {
         
     }
 
+    // TODO: udelat privatni !!!
+    
     @Override
     public void packetCompare(String ip, String mac, Parser parser) {
         if(core.getNetworkManager().isValidIp(ip) && core.getNetworkManager().isValidMac(mac)) {
@@ -71,6 +73,7 @@ public class LLTDProbeService implements ProbeService {
             core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_PHYSICAL_MEDIUM, p.getPhysicalMedium());
             core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_WIRELESS_MODE, p.getWirelessMode());
             core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_IPV6, p.getIpv6());
+            core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_MACHINE_NAME, p.getMachineName());
         }
     }
 
@@ -100,7 +103,16 @@ public class LLTDProbeService implements ProbeService {
             if(state_qd == Pcap.OK) {
                 Logger.Log2Console(probe.GetModuleName(), "LLTD Discovery Packet (1) odeslán");
             }
-
+            
+            /*LltdQdResetPacket packet_r2 = new LltdQdResetPacket(probe.getCore());
+            int state_r2 = Pcap.OK;
+            state_r2 += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_r2);
+            state_r2 += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_r2);
+            state_r2 += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_r2);
+            if(state_r2 == Pcap.OK) {
+                Logger.Log2Console(probe.GetModuleName(), "LLTD Reset QD Packet (3) odeslán");
+            }*/
+            
         }
 
     }, 5, TimeUnit.SECONDS);

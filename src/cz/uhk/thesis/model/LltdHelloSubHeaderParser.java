@@ -2,6 +2,7 @@
 package cz.uhk.thesis.model;
 
 import cz.uhk.thesis.core.Logger;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.jnetpcap.packet.format.FormatUtils;
@@ -22,7 +23,10 @@ public class LltdHelloSubHeaderParser implements Parser {
     public static final byte TYPE_SSID = 0x06;
     public static final byte TYPE_IPV4 = 0x07;
     public static final byte TYPE_IPV6 = 0x08;
+    public static final byte TYPE_MAXIMUM_OPERATIONAL_RATE = 0x09;
+    public static final byte TYPE_PERFOMANCE_COUNTER_FREQUENCY = 0x0A;
     public static final byte TYPE_LINK_SPEED = 0x0c;
+    public static final byte TYPE_MACHINE_NAME = 0x0f;
     
     public static final byte LEN_HOST_ID = 0x06;
     public static final byte LEN_CHARACTERISTICS = 0x02;
@@ -32,6 +36,8 @@ public class LltdHelloSubHeaderParser implements Parser {
 //    public static final byte LEN_SSID = 0x00; VARIABLE LENGTH
     public static final byte LEN_IPV4 = 0x04;
     public static final byte LEN_IPV6 = 0x10;
+    public static final byte LEN_MAXIMUM_OPERATIONAL_RATE = 0x02;
+    public static final byte LEN_PERFOMANCE_COUNTER_FREQUENCY = 0x08;
     public static final byte LEN_LINK_SPEED = 0x04;
     
     byte[] headerData;
@@ -41,13 +47,15 @@ public class LltdHelloSubHeaderParser implements Parser {
     private byte[] bIpv6            = new byte[LEN_IPV6];
     private byte[] bLinkSpeed       = new byte[LEN_LINK_SPEED];
     
+    private String sMachineName = "";
+    
     private byte bPhysicalMedium    = 0x00;
     private byte bWirelessMode      = 0x00;
     
     public LltdHelloSubHeaderParser(byte[] data)
     {
         this.headerData = data;
-        parse(0);
+        parse();
     }
     
     /**
@@ -134,29 +142,39 @@ public class LltdHelloSubHeaderParser implements Parser {
         return String.valueOf(ByteBuffer.wrap(bLinkSpeed).getInt()/1_00_00) + " Mbit";
     }
     
-    private void parse(int pointer)
+    public String getMachineName()
     {
-        byte type = headerData[pointer];
-        byte length = headerData[pointer+1];
-        
+        return sMachineName;
+    }
+    
+    private void parseType(byte type, int pointer2data, byte length)
+    {
         switch(type) {
             case TYPE_HOST_ID: {
-                bMac = Arrays.copyOfRange(headerData, 2+pointer, 2+pointer+length);
+                bMac = Arrays.copyOfRange(headerData, pointer2data, pointer2data+length);
             } break;
             case TYPE_WIRELESS_MODE: {
-                bWirelessMode = headerData[2+pointer];
+                bWirelessMode = headerData[pointer2data];
             } break;
             case TYPE_PHYSICAL_MEDIUM: {
-                bPhysicalMedium = headerData[2+pointer];
+                bPhysicalMedium = headerData[pointer2data];
             } break;
             case TYPE_IPV4: {
-                bIpv4 = Arrays.copyOfRange(headerData, 2+pointer, 2+pointer+length);
+                bIpv4 = Arrays.copyOfRange(headerData, pointer2data, pointer2data+length);
             } break;
             case TYPE_IPV6: {
-                bIpv6 = Arrays.copyOfRange(headerData, 2+pointer, 2+pointer+length);
+                bIpv6 = Arrays.copyOfRange(headerData, pointer2data, pointer2data+length);
             } break;
             case TYPE_LINK_SPEED: {
-                bLinkSpeed = Arrays.copyOfRange(headerData, 2+pointer,2+pointer+length);
+                bLinkSpeed = Arrays.copyOfRange(headerData, pointer2data, pointer2data+length);
+            } break;
+            case TYPE_MACHINE_NAME: {
+                byte[] bMachineName = Arrays.copyOfRange(headerData, pointer2data, pointer2data+length);
+                try {
+                    sMachineName = new String(bMachineName, "UTF-16LE");
+                } catch (UnsupportedEncodingException ex) {
+                    Logger.Log2ConsoleError(this, ex);
+                }
             } break;
             case TYPE_CHARACTERISTICS: {
                 // TODO:
@@ -167,16 +185,32 @@ public class LltdHelloSubHeaderParser implements Parser {
             case TYPE_SSID: {
                 // TODO:
             } break;
+            case TYPE_MAXIMUM_OPERATIONAL_RATE: {
+                // TODO:
+            } break;
+            case TYPE_PERFOMANCE_COUNTER_FREQUENCY: {
+                // TODO:
+            } break;
             default: {
-                Logger.Log2Console(this, "neznamy typ, koncim");
-                return;
+                // Logger.Log2Console(this, "neznamy typ");
             }
         }
+    }
+    
+    private void parse()
+    {
+        if(headerData.length == 0) return;
         
-        int pointerNext = (2+pointer+length);
-        
-        if(headerData.length > pointerNext) { 
-            parse(pointerNext);
+        for(int i = 0; i <= headerData.length; i++)
+        {
+            // posledni byte je pouze ukoncovaci
+            if(i+1 >= headerData.length) break;
+            
+            byte type = headerData[i];
+            byte length = headerData[i+1];
+            parseType(type, i+2, length);
+            i += (length+1);
+            
         }
         
     }

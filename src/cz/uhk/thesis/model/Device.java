@@ -15,6 +15,7 @@ public class Device {
     public static final String DEVICE_WIRELESS_MODE = "wirelessmode";
     public static final String DEVICE_IPV6 = "ipv6";
     public static final String DEVICE_LINK_SPEED = "linkspeed";
+    public static final String DEVICE_MACHINE_NAME = "machinename";
             
     private String ip = "";
     private String mac = "";

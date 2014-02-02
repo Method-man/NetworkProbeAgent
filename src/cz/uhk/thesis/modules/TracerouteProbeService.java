@@ -5,6 +5,8 @@ import cz.uhk.thesis.core.Core;
 import cz.uhk.thesis.core.Logger;
 import cz.uhk.thesis.model.Parser;
 import cz.uhk.thesis.model.IcmpPacket;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
 import org.jnetpcap.packet.JPacket;
 
 /**
@@ -39,8 +41,12 @@ public class TracerouteProbeService implements ProbeService {
 
     @Override
     public void probeSend() {
-        IcmpPacket t = new IcmpPacket(core);
-        Logger.Log2ConsolePacket(t);
+        try {
+            IcmpPacket t = new IcmpPacket(core);
+            Logger.Log2ConsolePacket(t);
+        } catch (UnknownHostException ex) {
+            Logger.Log2ConsoleError(this, ex);
+        }
     }
     
     

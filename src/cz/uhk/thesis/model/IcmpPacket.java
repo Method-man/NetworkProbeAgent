@@ -2,6 +2,9 @@
 package cz.uhk.thesis.model;
 
 import cz.uhk.thesis.core.Core;
+import cz.uhk.thesis.core.Logger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.jnetpcap.protocol.JProtocol;
 import org.jnetpcap.protocol.lan.Ethernet;
 import org.jnetpcap.protocol.network.Icmp;
@@ -18,13 +21,16 @@ public class IcmpPacket extends Packet {
 
     public static final int PACKET_ICMP_SIZE = 100;
     
-    public IcmpPacket(Core c) {
+    public IcmpPacket(Core c) throws UnknownHostException {
         super(Ip4.ID, new byte[PACKET_ICMP_SIZE]);
         
         Ethernet ethernetHeader = GetEthernet();
         
         this.setUByte(14, 0x40 | 0x05); // length 20, version 5
         ethernetHeader.source(c.getNetworkManager().GetActiveDeviceMACasByte());
+        
+        // obtain MAC address of the default gateway
+        InetAddress pingAddr = InetAddress.getByName("www.seznam.cz");
         
         this.scan(JProtocol.ETHERNET_ID);
         Ip4 ip4 = getHeader(new Ip4());
