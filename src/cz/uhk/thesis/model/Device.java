@@ -19,6 +19,7 @@ public class Device {
             
     private String ip = "";
     private String mac = "";
+    private boolean isGateway = false;
     private HashMap<String, String> info = new HashMap<>();
     
     /**
@@ -63,11 +64,20 @@ public class Device {
     public String getMac() {
         return mac;
     }
+
+    public boolean isIsGateway() {
+        return isGateway;
+    }
+
+    public void setIsGateway(boolean isGateway) {
+        this.isGateway = isGateway;
+    }  
     
     @Override
     public String toString()
     {
         String s = "ip:"+getIp()+" mac:"+getMac()+"\r\n";
+        s += "is gateway: "+(isIsGateway()?"yes":"no")+"\r\n";
         for(Map.Entry<String, String> i: info.entrySet()) {
             s += i.getKey()+": "+i.getValue()+"\r\n";
         }

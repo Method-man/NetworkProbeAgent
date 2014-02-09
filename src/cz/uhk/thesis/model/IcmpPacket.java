@@ -2,7 +2,6 @@
 package cz.uhk.thesis.model;
 
 import cz.uhk.thesis.core.Core;
-import cz.uhk.thesis.core.Logger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.jnetpcap.protocol.JProtocol;
@@ -44,9 +43,11 @@ public class IcmpPacket extends Packet {
         icmpHeader.code(0x00);
         
         this.recalculateAllChecksums();
-        
+
         /**
          * TODO:
+         * 
+         * https://github.com/mgodave/Jpcap/blob/master/sample/Traceroute.java
          * 
          * http://jnetpcap.com/examples/subheaders
          * http://jnetpcap.com/docs/javadocs/jnetpcap-1.4/index.html

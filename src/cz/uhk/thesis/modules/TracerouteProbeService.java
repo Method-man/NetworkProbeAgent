@@ -2,12 +2,11 @@
 package cz.uhk.thesis.modules;
 
 import cz.uhk.thesis.core.Core;
-import cz.uhk.thesis.core.Logger;
+import cz.uhk.thesis.model.Device;
 import cz.uhk.thesis.model.Parser;
-import cz.uhk.thesis.model.IcmpPacket;
-import java.net.UnknownHostException;
-import java.util.logging.Level;
 import org.jnetpcap.packet.JPacket;
+import org.jnetpcap.packet.format.FormatUtils;
+import org.jnetpcap.protocol.lan.Ethernet;
 
 /**
  *
@@ -26,7 +25,13 @@ public class TracerouteProbeService implements ProbeService {
     
     @Override
     public void packetParse(JPacket packet) {
-        
+        // function A
+        if(((TracerouteProbe)probe).useThisModuleObtainGatewayMac(packet)) {
+            Ethernet e = packet.getHeader(new Ethernet());
+            Device d = core.GetDeviceManager().getDevice(FormatUtils.mac(e.source()));
+            d.setIsGateway(true);
+            core.GetDeviceManager().deviceListChanged();
+        }
     }
 
     @Override
@@ -41,14 +46,15 @@ public class TracerouteProbeService implements ProbeService {
 
     @Override
     public void probeSend() {
-        try {
+        
+        // DELETE:
+            /* try {
             IcmpPacket t = new IcmpPacket(core);
             Logger.Log2ConsolePacket(t);
-        } catch (UnknownHostException ex) {
+            } catch (UnknownHostException ex) {
             Logger.Log2ConsoleError(this, ex);
-        }
+            } */
+
     }
-    
-    
     
 }
