@@ -4,11 +4,13 @@
 
 package cz.uhk.thesis.core;
 
+import cz.uhk.thesis.interfaces.DeviceObserver;
 import cz.uhk.thesis.modules.ArpProbe;
 import cz.uhk.thesis.modules.LLTDProbe;
-import cz.uhk.thesis.modules.Probe;
+import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.modules.TracerouteProbe;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -48,6 +50,19 @@ public class ProbeLoader {
             p.InitAfter();
             Logger.Log2Console(p.GetModuleName(), "spouštím init after");
             p.GetProbeService().probeSend();
+        }
+    }
+    
+    /**
+     * Notify all modules and save info to log
+     */
+    public void NotifyAllModules()
+    {
+        core.GetDeviceManager().LogInfo();
+        for(Probe p: probes) {
+            if(p.GetProbeService() instanceof DeviceObserver) {
+                ((DeviceObserver)p.GetProbeService()).Notify();
+            }
         }
     }
     

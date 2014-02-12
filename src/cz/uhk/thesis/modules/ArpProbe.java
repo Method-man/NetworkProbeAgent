@@ -4,6 +4,8 @@
 
 package cz.uhk.thesis.modules;
 
+import cz.uhk.thesis.interfaces.ProbeService;
+import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.Core;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.protocol.JProtocol;

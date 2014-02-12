@@ -2,7 +2,7 @@
  * Modul pro sniffovani
  */
 
-package cz.uhk.thesis.modules;
+package cz.uhk.thesis.interfaces;
 
 import cz.uhk.thesis.core.Core;
 import org.jnetpcap.packet.JPacket;

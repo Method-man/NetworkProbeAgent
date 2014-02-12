@@ -2,7 +2,7 @@
 package cz.uhk.thesis;
 
 import cz.uhk.thesis.core.Core;
-import cz.uhk.thesis.modules.Probe;
+import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.Logger;
 import cz.uhk.thesis.view.About;
 import cz.uhk.thesis.view.Status;

@@ -9,6 +9,8 @@ import cz.uhk.thesis.model.Device;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.jnetpcap.packet.format.FormatUtils;
 
 /**
  *
@@ -21,16 +23,18 @@ public class DeviceManager {
     
     HashMap<String, Device> devices = new HashMap<>();
     
-    public Device getDevice(String mac)
+    public Device getDevice(byte[] bMac)
     {
-        Device d = devices.get(mac);
+        String sMac = FormatUtils.mac(bMac);
+        Device d = devices.get(sMac);
         if(d == null) {
-            d = new Device(mac);
-            devices.put(mac, d);
+            d = new Device(sMac, bMac);
+            devices.put(sMac, d);
+            LogInfo();
         }
-        deviceListChanged();
         
         return d;
+        
     }
     
     /**
@@ -44,10 +48,28 @@ public class DeviceManager {
     }
     
     /**
+     * Get gateway device
+     * 
+     * @return 
+     */
+    public Device GetGateway()
+    {
+        for(Map.Entry<String, Device> d: devices.entrySet()) {
+            if(d.getValue().isIsGateway()) {
+                return d.getValue();
+            }
+        }
+        return null;
+    }
+
+    /**
      * Trigger the Logger of devices if device list is not empty
      */
-    public void deviceListChanged()
-    {
+    public void LogInfo() {
+        
+        // TODO: presunout do Loggeru !
+        
+        Logger.Log2Console(this, "ukladam nove info");
         if(DevicesCount() > 0) {
             List<Device> d = new ArrayList<>(devices.values());
             Logger.Log2File(d);

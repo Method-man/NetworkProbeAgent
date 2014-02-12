@@ -1,6 +1,8 @@
 
 package cz.uhk.thesis.modules;
 
+import cz.uhk.thesis.interfaces.ProbeService;
+import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.Core;
 import cz.uhk.thesis.model.LltdHeader;
 import cz.uhk.thesis.model.LltdQdDiscoveryPacket;
@@ -46,20 +48,20 @@ public class LLTDProbeService implements ProbeService {
                         packet.size() - LltdHelloSubHeaderParser.OFFSET_SUBHEADER_HELLO
                 );
                 LltdHelloSubHeaderParser helloParser = new LltdHelloSubHeaderParser(subheader);
-                packetCompare(helloParser.getIpv4(), FormatUtils.mac(lltdHeader.source()), helloParser);
+                packetCompare(helloParser.getIpv4(), lltdHeader.source(), helloParser);
             }
         }
     }
     
     @Override
-    public void packetCompare(String ip, String mac) {
+    public void packetCompare(String ip, byte[] mac) {
         
     }
 
     // TODO: udelat privatni !!!
     
     @Override
-    public void packetCompare(String ip, String mac, Parser parser) {
+    public void packetCompare(String ip, byte[] mac, Parser parser) {
         if(core.getNetworkManager().isValidIp(ip) && core.getNetworkManager().isValidMac(mac)) {
             /**
              * TODO: skutecne nastavit ? zkontrolovat jaky zaznam existuje a musi se shodovat
@@ -74,6 +76,8 @@ public class LLTDProbeService implements ProbeService {
             core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_WIRELESS_MODE, p.getWirelessMode());
             core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_IPV6, p.getIpv6());
             core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_MACHINE_NAME, p.getMachineName());
+            
+            core.getProbeLoader().NotifyAllModules();
         }
     }
 

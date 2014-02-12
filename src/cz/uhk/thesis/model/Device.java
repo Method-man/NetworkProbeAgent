@@ -19,6 +19,7 @@ public class Device {
             
     private String ip = "";
     private String mac = "";
+    private byte[] bMac = new byte[6];
     private boolean isGateway = false;
     private HashMap<String, String> info = new HashMap<>();
     
@@ -43,8 +44,9 @@ public class Device {
         info.put(pos, val);
     }
 
-    public Device(String mac) {
+    public Device(String mac, byte[] bMac) {
         this.mac = mac;
+        this.bMac = bMac;
     }
     
     public void SetIP(String ip)
@@ -63,6 +65,11 @@ public class Device {
 
     public String getMac() {
         return mac;
+    }
+    
+    public byte[] getMacAsByte()
+    {
+        return bMac;
     }
 
     public boolean isIsGateway() {

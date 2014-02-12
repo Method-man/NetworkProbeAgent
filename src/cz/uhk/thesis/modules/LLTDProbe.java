@@ -4,9 +4,13 @@
 
 package cz.uhk.thesis.modules;
 
+import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.Core;
 import cz.uhk.thesis.model.LltdHeader;
 import cz.uhk.thesis.core.Logger;
+import cz.uhk.thesis.modules.LLTDProbeService;
+import cz.uhk.thesis.interfaces.ProbeService;
+import cz.uhk.thesis.interfaces.Probe;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.JRegistry;
 import org.jnetpcap.packet.RegistryHeaderErrors;

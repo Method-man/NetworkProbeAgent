@@ -2,7 +2,7 @@
 package cz.uhk.thesis.core;
 
 import cz.uhk.thesis.model.Packet;
-import cz.uhk.thesis.modules.Probe;
+import cz.uhk.thesis.interfaces.Probe;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -101,6 +101,11 @@ public class NetworkManager {
         if(ip.matches(ExcludeMasks.NETWORK_IP_LINK_LOCAL.getMask())) isValid = false;
         
         return isValid;
+    }
+    
+    public boolean isValidMac(byte[] mac)
+    {
+        return isValidMac(FormatUtils.mac(mac));
     }
     
     public boolean isValidMac(String mac)

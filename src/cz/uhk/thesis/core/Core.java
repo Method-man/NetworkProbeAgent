@@ -4,8 +4,6 @@
 
 package cz.uhk.thesis.core;
 
-import cz.uhk.thesis.model.IcmpPacket;
-
 /**
  *
  * @author Filip Valenta

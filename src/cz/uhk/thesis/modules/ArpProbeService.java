@@ -1,9 +1,10 @@
 
 package cz.uhk.thesis.modules;
 
+import cz.uhk.thesis.interfaces.ProbeService;
+import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.Core;
 import cz.uhk.thesis.core.Logger;
-import cz.uhk.thesis.model.Device;
 import cz.uhk.thesis.model.Parser;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.format.FormatUtils;
@@ -47,21 +48,22 @@ public class ArpProbeService implements ProbeService {
             +FormatUtils.ip(arpHeader.spa())+" to "
             +FormatUtils.ip(arpHeader.tpa()));
         
-        packetCompare(FormatUtils.ip(arpHeader.spa()), FormatUtils.mac(arpHeader.sha()));
-        packetCompare(FormatUtils.ip(arpHeader.tpa()), FormatUtils.mac(arpHeader.tha()));
+        packetCompare(FormatUtils.ip(arpHeader.spa()), arpHeader.sha());
+        packetCompare(FormatUtils.ip(arpHeader.tpa()), arpHeader.tha());
     }
     
     
 
     @Override
-    public void packetCompare(String ip, String mac) {
+    public void packetCompare(String ip, byte[] mac) {
         if(core.getNetworkManager().isValidIp(ip) && core.getNetworkManager().isValidMac(mac)) {
             core.GetDeviceManager().getDevice(mac).SetIP(ip);
+            core.getProbeLoader().NotifyAllModules();
         }
     }
     
     @Override
-    public void packetCompare(String ip, String mac, Parser parser) {
+    public void packetCompare(String ip, byte[] mac, Parser parser) {
         
     }
 
