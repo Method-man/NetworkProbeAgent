@@ -18,6 +18,9 @@ import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapIf;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.protocol.lan.Ethernet;
+import org.jnetpcap.protocol.network.Icmp;
+import org.jnetpcap.protocol.network.Icmp.IcmpType;
+import org.jnetpcap.protocol.network.Ip4;
 
 /**
  *
@@ -27,9 +30,13 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
 
     public static final int STATE_HAS_GATEWAY = 1;
     public static final int STATE_PROCESS_TRACEROUTE = 2;
+    public static final int STATE_TRACEROUTE_DONE = 3;
     
     private final Probe probe;
     private final Core core;
+    
+    private int tracerouteTtl = 1;
+    private byte[] ip;
     
     public TracerouteProbeService(Core core, Probe probe)
     {
@@ -51,7 +58,18 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
             core.getProbeLoader().NotifyAllModules();
         }
         // function B - Traceroute
-        // TODO:
+        if(((TracerouteProbe)probe).useThisModuleTraceroute(packet)) {
+            boolean requiredDestination = ((Ip4)packet.getHeader(new Ip4())).source() == GetTracerouteHostTestIp();
+            int type = ((Icmp)packet.getHeader(new Icmp())).type();
+            if(type == IcmpType.TIME_EXCEEDED_ID && !requiredDestination) { // vyprselo TTL a neni to cilova destinace
+                Logger.Log2Console(this, "ano");
+                tracerouteTtl++;
+                TracerouteSend();
+            } else if(requiredDestination || type == IcmpType.ECHO_REPLY_ID) { // je to cilova destinace nebo odpovedel nalezeno
+                SetState(STATE_TRACEROUTE_DONE);
+                Logger.Log2Console(this, "traceroute done");
+            }
+        }
     }
 
     @Override
@@ -76,9 +94,11 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
     
     private void TracerouteSend()
     {
-        if(!IsInState(STATE_PROCESS_TRACEROUTE)) {
+        if(IsInState(STATE_TRACEROUTE_DONE)) return;
+        
+        if((!IsInState(STATE_PROCESS_TRACEROUTE) || tracerouteTtl > 1)) {
             SetState(STATE_PROCESS_TRACEROUTE);
-            Logger.Log2Console(this, "odesilam traceroute");
+            Logger.Log2Console(this, "odesilam traceroute hop "+tracerouteTtl);
             try {
                 Device gateway = core.GetDeviceManager().GetGateway();
                 if(gateway != null) {
@@ -88,7 +108,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                     icmp.ethernetDestination(gateway.getMacAsByte());
                     icmp.ipSource(core.getNetworkManager().GetActiveDeviceIPasByte());
                     icmp.ipDestination(GetTracerouteHostTestIp());
-                    icmp.TimeToLive(10);
+                    icmp.TimeToLive(tracerouteTtl);
                     icmp.recalculateAllChecksums();
                     
                     int state_icmp = Pcap.OK;
@@ -106,6 +126,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
     @Override
     public void Notify() {
         if(IsInState(STATE_HAS_GATEWAY)) {
+            tracerouteTtl = 1;
             TracerouteSend();
         }
     }
@@ -118,9 +139,10 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
     @Override
     public void SetState(int state) {
         switch(state) {
+            case STATE_INITIAL:
             case STATE_HAS_GATEWAY:
             case STATE_PROCESS_TRACEROUTE:
-            case STATE_INITIAL:
+            case STATE_TRACEROUTE_DONE:
             {
                 this.state = state;
             } break;
@@ -140,11 +162,14 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
      */
     public byte[] GetTracerouteHostTestIp()
     {
-        byte[] ip = new byte[4];
-        try {
-            ip = InetAddress.getByName(GetTracerouteHostTestHostname()).getAddress();
-        } catch (UnknownHostException ex) {
-            Logger.Log2ConsoleError(this, ex);
+        if(ip == null) {
+            ip = null;
+            try {
+                ip = new byte[4];
+                ip = InetAddress.getByName(GetTracerouteHostTestHostname()).getAddress();
+            } catch (UnknownHostException ex) {
+                Logger.Log2ConsoleError(this, ex);
+            }
         }
         return ip;
     }

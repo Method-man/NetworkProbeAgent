@@ -4,10 +4,13 @@ package cz.uhk.thesis.modules;
 import cz.uhk.thesis.interfaces.ProbeService;
 import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.Core;
+import cz.uhk.thesis.core.Logger;
 import java.util.Arrays;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.format.FormatUtils;
 import org.jnetpcap.protocol.lan.Ethernet;
+import org.jnetpcap.protocol.network.Icmp;
+import org.jnetpcap.protocol.network.Icmp.IcmpType;
 import org.jnetpcap.protocol.network.Ip4;
 
 /**
@@ -43,6 +46,7 @@ public class TracerouteProbe implements Probe {
     public boolean useThisModule(JPacket packet) {
         boolean use = false;
         use |= useThisModuleObtainGatewayMac(packet);
+        use |= useThisModuleTraceroute(packet);
         return use;
     }
     
@@ -68,6 +72,24 @@ public class TracerouteProbe implements Probe {
                     );
             // service in initial state
             use &= ((TracerouteProbeService)probeService).IsInState(TracerouteProbeService.STATE_INITIAL);
+        }
+        return use;
+    }
+    
+    public boolean useThisModuleTraceroute(JPacket packet)
+    {
+        boolean use = false;
+        if(packet.hasHeader(new Icmp())) {
+            Icmp icmp = packet.getHeader(new Icmp());
+            switch(icmp.type()) {
+                case IcmpType.TIME_EXCEEDED_ID: 
+                case IcmpType.DESTINATION_UNREACHABLE_ID: 
+                case IcmpType.ECHO_REPLY_ID: 
+                {
+                    use = true;
+                } break;
+                default: use = false; break;
+            }
         }
         return use;
     }
