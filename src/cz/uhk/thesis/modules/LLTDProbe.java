@@ -4,12 +4,9 @@
 
 package cz.uhk.thesis.modules;
 
-import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.Core;
 import cz.uhk.thesis.model.LltdHeader;
 import cz.uhk.thesis.core.Logger;
-import cz.uhk.thesis.modules.LLTDProbeService;
-import cz.uhk.thesis.interfaces.ProbeService;
 import cz.uhk.thesis.interfaces.Probe;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.JRegistry;
@@ -19,29 +16,15 @@ import org.jnetpcap.packet.RegistryHeaderErrors;
  *
  * @author Filip Valenta
  */
-public class LLTDProbe implements Probe {
+public class LltdProbe extends Probe {
     
-    LLTDProbeService probeService;
-    Core core;
-
-    @Override
-    public Core getCore() {
-        return core;
-    }
-
-    public LLTDProbe(Core core) {
-        this.core = core;
-        probeService = new LLTDProbeService(core, this);
+    public LltdProbe(Core core) {
+        super(core);
     }
 
     @Override
     public String GetModuleName() {
         return "LLTD packets";
-    }
-
-    @Override
-    public ProbeService GetProbeService() {
-        return probeService;
     }
     
     @Override

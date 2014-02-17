@@ -17,18 +17,17 @@ import java.util.concurrent.TimeUnit;
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapIf;
 import org.jnetpcap.packet.JPacket;
-import org.jnetpcap.packet.format.FormatUtils;
 
 /**
  *
  * @author Filip Valenta
  */
-public class LLTDProbeService implements ProbeService {
+public class LltdProbeService implements ProbeService {
     
     private final Probe probe;
     private final Core core;
     
-    public LLTDProbeService(Core core, Probe probe)
+    public LltdProbeService(Core core, Probe probe)
     {
         this.probe = probe;
         this.core = core;
@@ -89,33 +88,24 @@ public class LLTDProbeService implements ProbeService {
         @Override
         public void run() {
             
-            PcapIf activeDevice = probe.getCore().getNetworkManager().getActiveDevice();
+            PcapIf activeDevice = core.getNetworkManager().getActiveDevice();
             
-            LltdQdResetPacket packet_r = new LltdQdResetPacket(probe.getCore());
+            LltdQdResetPacket packet_r = new LltdQdResetPacket(core);
             int state_r = Pcap.OK;
-            state_r += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_r);
-            state_r += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_r);
-            state_r += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_r);
+            state_r += core.getNetworkManager().SendPacket(activeDevice, packet_r);
+            state_r += core.getNetworkManager().SendPacket(activeDevice, packet_r);
+            state_r += core.getNetworkManager().SendPacket(activeDevice, packet_r);
             if(state_r == Pcap.OK) {
                 Logger.Log2Console(probe.GetModuleName(), "LLTD Reset QD Packet (3) odeslán");
             }
 
 
-            LltdQdDiscoveryPacket packet_qd = new LltdQdDiscoveryPacket(probe.getCore());
+            LltdQdDiscoveryPacket packet_qd = new LltdQdDiscoveryPacket(core);
             int state_qd = Pcap.OK;
-            state_qd += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_qd);
+            state_qd += core.getNetworkManager().SendPacket(activeDevice, packet_qd);
             if(state_qd == Pcap.OK) {
                 Logger.Log2Console(probe.GetModuleName(), "LLTD Discovery Packet (1) odeslán");
             }
-            
-            /*LltdQdResetPacket packet_r2 = new LltdQdResetPacket(probe.getCore());
-            int state_r2 = Pcap.OK;
-            state_r2 += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_r2);
-            state_r2 += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_r2);
-            state_r2 += probe.getCore().getNetworkManager().SendPacket(activeDevice, packet_r2);
-            if(state_r2 == Pcap.OK) {
-                Logger.Log2Console(probe.GetModuleName(), "LLTD Reset QD Packet (3) odeslán");
-            }*/
             
         }
 
