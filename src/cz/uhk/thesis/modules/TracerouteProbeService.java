@@ -47,7 +47,8 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
     @Override
     public void packetParse(JPacket packet) {
         // function A - Obtain gateway MAC
-        if(((TracerouteProbe)probe).useThisModuleObtainGatewayMac(packet)) {
+        TracerouteProbe probeTraceroute = ((TracerouteProbe)probe);
+        if(probeTraceroute.useThisModuleObtainGatewayMac(packet)) {
             Ethernet e = packet.getHeader(new Ethernet());
             Device d = core.GetDeviceManager().getDevice(e.source());
             d.setIsGateway(true);
@@ -58,18 +59,29 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
             core.getProbeLoader().NotifyAllModules();
         }
         // function B - Traceroute
-        if(((TracerouteProbe)probe).useThisModuleTraceroute(packet)) {
-            boolean requiredDestination = ((Ip4)packet.getHeader(new Ip4())).source() == GetTracerouteHostTestIp();
+        if(probeTraceroute.useThisModuleTraceroute(packet)) {
+            byte[] destination = ((Ip4)packet.getHeader(new Ip4())).source();
+            boolean requiredDestination = destination == GetTracerouteHostTestIp();
             int type = ((Icmp)packet.getHeader(new Icmp())).type();
             if(type == IcmpType.TIME_EXCEEDED_ID && !requiredDestination) { // vyprselo TTL a neni to cilova destinace
                 Logger.Log2Console(this, "ano");
                 tracerouteTtl++;
                 TracerouteSend();
+                addIp2RouteFromPacket(packet, destination);
             } else if(requiredDestination || type == IcmpType.ECHO_REPLY_ID) { // je to cilova destinace nebo odpovedel nalezeno
                 SetState(STATE_TRACEROUTE_DONE);
+                addIp2RouteFromPacket(packet, destination);
                 Logger.Log2Console(this, "traceroute done");
+                core.getProbeLoader().NotifyAllModules();
             }
         }
+    }
+    
+    private void addIp2RouteFromPacket(JPacket packet, byte[] destination)
+    {
+        Ethernet e = packet.getHeader(new Ethernet());
+        Device d = core.GetDeviceManager().getDevice(e.source());
+        d.addRoute2internet(destination);
     }
 
     @Override
@@ -112,7 +124,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                     icmp.recalculateAllChecksums();
                     
                     int state_icmp = Pcap.OK;
-                    state_icmp += probe.getCore().getNetworkManager().SendPacket(activeDevice, icmp);
+                    state_icmp += core.getNetworkManager().SendPacket(activeDevice, icmp);
                     if(state_icmp == Pcap.OK) {
                         Logger.Log2Console(probe.GetModuleName(), "Traceroute Packet (hop "+icmp.TimeToLive()+") odeslán");
                     }

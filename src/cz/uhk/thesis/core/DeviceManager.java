@@ -55,7 +55,7 @@ public class DeviceManager {
     public Device GetGateway()
     {
         for(Map.Entry<String, Device> d: devices.entrySet()) {
-            if(d.getValue().isIsGateway()) {
+            if(d.getValue().IsGateway()) {
                 return d.getValue();
             }
         }

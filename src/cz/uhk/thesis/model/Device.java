@@ -1,8 +1,11 @@
 
 package cz.uhk.thesis.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import org.jnetpcap.packet.format.FormatUtils;
 
 /**
  *
@@ -21,6 +24,7 @@ public class Device {
     private String mac = "";
     private byte[] bMac = new byte[6];
     private boolean isGateway = false;
+    private List<byte[]> route2internet = new ArrayList<>();
     private HashMap<String, String> info = new HashMap<>();
     
     /**
@@ -49,6 +53,11 @@ public class Device {
         this.bMac = bMac;
     }
     
+    public void addRoute2internet(byte[] ip)
+    {
+        route2internet.add(ip);
+    }
+    
     public void SetIP(String ip)
     {
         this.ip = ip;
@@ -72,7 +81,7 @@ public class Device {
         return bMac;
     }
 
-    public boolean isIsGateway() {
+    public boolean IsGateway() {
         return isGateway;
     }
 
@@ -84,10 +93,18 @@ public class Device {
     public String toString()
     {
         String s = "ip:"+getIp()+" mac:"+getMac()+"\r\n";
-        s += "is gateway: "+(isIsGateway()?"yes":"no")+"\r\n";
+        s += "is gateway: "+(IsGateway()?"yes":"no")+"\r\n";
         for(Map.Entry<String, String> i: info.entrySet()) {
             s += i.getKey()+": "+i.getValue()+"\r\n";
         }
+        if(IsGateway()) {
+            int hop = 1;
+            for(byte[] ipr: route2internet) {
+                s += "hop "+hop+": "+FormatUtils.ip(ipr)+"\r\n";
+                hop++;
+            }
+        }
+        s += "---------------------------------\r\n";
         return s;
     }
     

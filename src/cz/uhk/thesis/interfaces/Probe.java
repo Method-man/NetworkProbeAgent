@@ -1,6 +1,3 @@
-/*
- * Modul pro sniffovani
- */
 
 package cz.uhk.thesis.interfaces;
 
@@ -11,18 +8,29 @@ import org.jnetpcap.packet.JPacket;
  *
  * @author Filip Valenta
  */
-public interface Probe {
+public abstract class Probe {
     
-    public Core getCore();
+    protected ProbeService probeService;
+    protected Core core;
     
-    public String GetModuleName();
+    public Probe(Core core) {
+        this.core = core;
+    }
     
-    public ProbeService GetProbeService();
-            
-    public boolean useThisModule(JPacket packet);
+    public ProbeService GetProbeService() {
+        return probeService;
+    }
     
-    public void InitBefore();
+    public void SetProbeService(ProbeService probeService) {
+        this.probeService = probeService;
+    }
     
-    public void InitAfter();
+    public abstract String GetModuleName();
+    
+    public abstract boolean useThisModule(JPacket packet);
+    
+    public abstract void InitBefore();
+    
+    public abstract void InitAfter();
     
 }

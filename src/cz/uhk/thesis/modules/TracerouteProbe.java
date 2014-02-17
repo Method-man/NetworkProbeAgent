@@ -1,13 +1,10 @@
 
 package cz.uhk.thesis.modules;
 
-import cz.uhk.thesis.interfaces.ProbeService;
 import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.Core;
-import cz.uhk.thesis.core.Logger;
 import java.util.Arrays;
 import org.jnetpcap.packet.JPacket;
-import org.jnetpcap.packet.format.FormatUtils;
 import org.jnetpcap.protocol.lan.Ethernet;
 import org.jnetpcap.protocol.network.Icmp;
 import org.jnetpcap.protocol.network.Icmp.IcmpType;
@@ -17,29 +14,15 @@ import org.jnetpcap.protocol.network.Ip4;
  *
  * @author Filip Valenta
  */
-public class TracerouteProbe implements Probe {
+public class TracerouteProbe extends Probe {
     
-    ProbeService probeService;
-    Core core;
-    
-    public TracerouteProbe(Core core)
-    {
-        this.core = core;
-    }
-    
-    @Override
-    public Core getCore() {
-        return core;
+    public TracerouteProbe(Core core) {
+        super(core);
     }
 
     @Override
     public String GetModuleName() {
         return "Traceroute";
-    }
-
-    @Override
-    public ProbeService GetProbeService() {
-        return probeService;
     }
 
     @Override
@@ -96,7 +79,7 @@ public class TracerouteProbe implements Probe {
 
     @Override
     public void InitBefore() {
-        probeService = new TracerouteProbeService(getCore(), this);
+        
     }
 
     @Override

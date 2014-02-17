@@ -4,13 +4,14 @@
 
 package cz.uhk.thesis.core;
 
+import cz.uhk.thesis.factories.ArpProbeFactory;
+import cz.uhk.thesis.factories.LltdProbeFactory;
+import cz.uhk.thesis.factories.PingProbeFactory;
+import cz.uhk.thesis.factories.TracerouteProbeFactory;
 import cz.uhk.thesis.interfaces.DeviceObserver;
-import cz.uhk.thesis.modules.ArpProbe;
-import cz.uhk.thesis.modules.LLTDProbe;
 import cz.uhk.thesis.interfaces.Probe;
-import cz.uhk.thesis.modules.TracerouteProbe;
+import cz.uhk.thesis.interfaces.ProbeFactory;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -25,10 +26,14 @@ public class ProbeLoader {
     public ProbeLoader(Core core)
     {
         this.core = core;
-        
-        probes.add(new ArpProbe(this.core));
-        probes.add(new LLTDProbe(this.core));
-        probes.add(new TracerouteProbe(this.core));
+        ProbeFactory pf = new ArpProbeFactory(core);
+        probes.add(pf.getProbe());
+        pf = new LltdProbeFactory(core);
+        probes.add(pf.getProbe());
+        pf = new TracerouteProbeFactory(core);
+        probes.add(pf.getProbe());
+        pf = new PingProbeFactory(core);
+        probes.add(pf.getProbe());
     }
     
     public List<Probe> GetProbes()

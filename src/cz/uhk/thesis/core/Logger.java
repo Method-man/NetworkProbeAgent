@@ -31,7 +31,6 @@ public class Logger {
             for(Device d: devices) {
                 writer.write(d.toString()+"\r\n");
             }
-            writer.write("---------------------------------\r\n");
             writer.close();
         } catch (IOException ex) { }
     }
