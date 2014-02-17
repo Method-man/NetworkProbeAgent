@@ -19,12 +19,14 @@ public class Device {
     public static final String DEVICE_IPV6 = "ipv6";
     public static final String DEVICE_LINK_SPEED = "linkspeed";
     public static final String DEVICE_MACHINE_NAME = "machinename";
+    
+    public static final int PACKET_LOSS_UNDEFINED = -1;
             
     private String ip = "";
     private String mac = "";
     private byte[] bMac = new byte[6];
     private boolean isGateway = false;
-    private List<byte[]> route2internet = new ArrayList<>();
+    private HashMap<byte[], Integer> route2internet = new HashMap<>();
     private HashMap<String, String> info = new HashMap<>();
     
     /**
@@ -53,9 +55,20 @@ public class Device {
         this.bMac = bMac;
     }
     
-    public void addRoute2internet(byte[] ip)
+    public void AddRoute2internet(byte[] ip) 
     {
-        route2internet.add(ip);
+        SetPacketLoss(ip, PACKET_LOSS_UNDEFINED);
+    }
+    
+    /**
+     * Overwrite row, set packet loss
+     * 
+     * @param ip
+     * @param packetLoss 
+     */
+    public void SetPacketLoss(byte[] ip, int packetLoss)
+    {
+        route2internet.put(ip, packetLoss);
     }
     
     public void SetIP(String ip)
@@ -99,8 +112,8 @@ public class Device {
         }
         if(IsGateway()) {
             int hop = 1;
-            for(byte[] ipr: route2internet) {
-                s += "hop "+hop+": "+FormatUtils.ip(ipr)+"\r\n";
+            for(Map.Entry<byte[], Integer> route: route2internet.entrySet()) {
+                s += "hop "+hop+": "+FormatUtils.ip(route.getKey())+", packet loss: "+route.getValue()+"\r\n";
                 hop++;
             }
         }

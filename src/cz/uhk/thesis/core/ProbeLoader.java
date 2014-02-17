@@ -11,6 +11,7 @@ import cz.uhk.thesis.factories.TracerouteProbeFactory;
 import cz.uhk.thesis.interfaces.DeviceObserver;
 import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.interfaces.ProbeFactory;
+import cz.uhk.thesis.interfaces.Stateful;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +19,7 @@ import java.util.List;
  *
  * @author Filip Valenta
  */
-public class ProbeLoader {
+public class ProbeLoader extends Stateful {
     
     private final List<Probe> probes = new ArrayList<>();
     private final Core core;
@@ -69,6 +70,12 @@ public class ProbeLoader {
                 ((DeviceObserver)p.GetProbeService()).Notify();
             }
         }
+    }
+
+    @Override
+    public void SetState(int state) {
+        // TODO: celkove stavy aplikace, nikoli modulu... 
+        // napriklad has gateway se presune sem, traceroute se presune sem
     }
     
 }

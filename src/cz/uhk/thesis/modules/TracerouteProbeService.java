@@ -81,7 +81,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
     {
         Ethernet e = packet.getHeader(new Ethernet());
         Device d = core.GetDeviceManager().getDevice(e.source());
-        d.addRoute2internet(destination);
+        d.AddRoute2internet(destination);
     }
 
     @Override
