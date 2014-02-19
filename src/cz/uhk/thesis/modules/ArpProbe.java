@@ -39,5 +39,10 @@ public class ArpProbe extends Probe {
     public void InitAfter() {
         
     }
+
+    @Override
+    public String GetTcpdumpFilter() {
+        return "arp";
+    }
     
 }

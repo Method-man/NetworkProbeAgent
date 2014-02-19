@@ -4,7 +4,7 @@ package cz.uhk.thesis.modules;
 import cz.uhk.thesis.interfaces.ProbeService;
 import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.Core;
-import cz.uhk.thesis.core.Logger;
+import cz.uhk.thesis.core.LogService;
 import cz.uhk.thesis.interfaces.DeviceObserver;
 import cz.uhk.thesis.model.Device;
 import cz.uhk.thesis.model.Parser;
@@ -54,7 +54,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
             d.setIsGateway(true);
             if(IsInState(STATE_INITIAL)) {
                 SetState(STATE_HAS_GATEWAY);
-                Logger.Log2Console(this, "nastavuji stav "+STATE_HAS_GATEWAY);
+                LogService.Log2Console(this, "nastavuji stav "+STATE_HAS_GATEWAY);
             }
             core.getProbeLoader().NotifyAllModules();
         }
@@ -64,14 +64,13 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
             boolean requiredDestination = destination == GetTracerouteHostTestIp();
             int type = ((Icmp)packet.getHeader(new Icmp())).type();
             if(type == IcmpType.TIME_EXCEEDED_ID && !requiredDestination) { // vyprselo TTL a neni to cilova destinace
-                Logger.Log2Console(this, "ano");
                 tracerouteTtl++;
                 TracerouteSend();
                 addIp2RouteFromPacket(packet, destination);
             } else if(requiredDestination || type == IcmpType.ECHO_REPLY_ID) { // je to cilova destinace nebo odpovedel nalezeno
                 SetState(STATE_TRACEROUTE_DONE);
                 addIp2RouteFromPacket(packet, destination);
-                Logger.Log2Console(this, "traceroute done");
+                LogService.Log2Console(this, "traceroute done");
                 core.getProbeLoader().NotifyAllModules();
             }
         }
@@ -100,7 +99,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
         try {
             new URL("http://"+GetTracerouteHostTestHostname()).openStream().close();
         } catch (IOException ex) {
-            Logger.Log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         }
     }
     
@@ -110,7 +109,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
         
         if((!IsInState(STATE_PROCESS_TRACEROUTE) || tracerouteTtl > 1)) {
             SetState(STATE_PROCESS_TRACEROUTE);
-            Logger.Log2Console(this, "odesilam traceroute hop "+tracerouteTtl);
+            LogService.Log2Console(this, "odesilam traceroute hop "+tracerouteTtl);
             try {
                 Device gateway = core.GetDeviceManager().GetGateway();
                 if(gateway != null) {
@@ -126,11 +125,11 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                     int state_icmp = Pcap.OK;
                     state_icmp += core.getNetworkManager().SendPacket(activeDevice, icmp);
                     if(state_icmp == Pcap.OK) {
-                        Logger.Log2Console(probe.GetModuleName(), "Traceroute Packet (hop "+icmp.TimeToLive()+") odeslán");
+                        LogService.Log2Console(probe.GetModuleName(), "Traceroute Packet (hop "+icmp.TimeToLive()+") odeslán");
                     }
                 }
             } catch (UnknownHostException ex) {
-                Logger.Log2ConsoleError(this, ex);
+                LogService.Log2ConsoleError(this, ex);
             }
         }
     }
@@ -180,7 +179,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                 ip = new byte[4];
                 ip = InetAddress.getByName(GetTracerouteHostTestHostname()).getAddress();
             } catch (UnknownHostException ex) {
-                Logger.Log2ConsoleError(this, ex);
+                LogService.Log2ConsoleError(this, ex);
             }
         }
         return ip;

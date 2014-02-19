@@ -46,6 +46,7 @@ public class ProbeLoader extends Stateful {
     {
         for(Probe p: probes) {
             p.InitBefore();
+            core.getNetworkManager().Add2Filter(p.GetTcpdumpFilter());
             System.out.println("inicializuji modul: "+p.GetModuleName());
         }
     }
@@ -54,7 +55,7 @@ public class ProbeLoader extends Stateful {
     {
         for(Probe p: probes) {
             p.InitAfter();
-            Logger.Log2Console(p.GetModuleName(), "spouštím init after");
+            LogService.Log2Console(p.GetModuleName(), "spouštím init after");
             p.GetProbeService().probeSend();
         }
     }
@@ -76,6 +77,8 @@ public class ProbeLoader extends Stateful {
     public void SetState(int state) {
         // TODO: celkove stavy aplikace, nikoli modulu... 
         // napriklad has gateway se presune sem, traceroute se presune sem
+        
+        // TODO: if in state all done > AdapterService > send XML 2 server
     }
     
 }

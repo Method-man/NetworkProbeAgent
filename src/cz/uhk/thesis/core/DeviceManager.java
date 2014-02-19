@@ -63,16 +63,16 @@ public class DeviceManager {
     }
 
     /**
-     * Trigger the Logger of devices if device list is not empty
+     * Trigger the LogService of devices if device list is not empty
      */
     public void LogInfo() {
         
         // TODO: presunout do Loggeru !
         
-        Logger.Log2Console(this, "ukladam nove info");
+        LogService.Log2Console(this, "ukladam nove info");
         if(DevicesCount() > 0) {
             List<Device> d = new ArrayList<>(devices.values());
-            Logger.Log2File(d);
+            LogService.Log2File(d);
         }
     }
     

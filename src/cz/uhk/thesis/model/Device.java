@@ -19,6 +19,7 @@ public class Device {
     public static final String DEVICE_IPV6 = "ipv6";
     public static final String DEVICE_LINK_SPEED = "linkspeed";
     public static final String DEVICE_MACHINE_NAME = "machinename";
+    public static final String DEVICE_BSSID = "bssid";
     
     public static final int PACKET_LOSS_UNDEFINED = -1;
             

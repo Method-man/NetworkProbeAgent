@@ -3,7 +3,7 @@ package cz.uhk.thesis;
 
 import cz.uhk.thesis.core.Core;
 import cz.uhk.thesis.interfaces.Probe;
-import cz.uhk.thesis.core.Logger;
+import cz.uhk.thesis.core.LogService;
 import cz.uhk.thesis.view.About;
 import cz.uhk.thesis.view.Status;
 import java.awt.AWTException;
@@ -39,7 +39,7 @@ public class NetworkDiscovery {
     private void initSystemTray()
     {
         if (!SystemTray.isSupported()) {
-            Logger.Log2Console(this, "SystemTray is not supported");
+            LogService.Log2Console(this, "SystemTray is not supported");
         }
         else {
             final PopupMenu popup = new PopupMenu();
@@ -48,7 +48,7 @@ public class NetworkDiscovery {
             try {
             img = ImageIO.read(new File("images/icon-16x16.png"));
             } catch (IOException e) {
-                Logger.Log2Console(this, "SystemTray error reading image file");
+                LogService.Log2Console(this, "SystemTray error reading image file");
             }
             
             final TrayIcon trayIcon = new TrayIcon(img, Language.APP_NAME);
@@ -95,7 +95,7 @@ public class NetworkDiscovery {
             try {
                 tray.add(trayIcon);
             } catch (AWTException e) {
-                Logger.Log2Console(this, "TrayIcon could not be added");
+                LogService.Log2Console(this, "TrayIcon could not be added");
             }
         }
     }

@@ -7,7 +7,7 @@ import cz.uhk.thesis.core.Core;
 import cz.uhk.thesis.model.LltdHeader;
 import cz.uhk.thesis.model.LltdQdDiscoveryPacket;
 import cz.uhk.thesis.model.LltdQdResetPacket;
-import cz.uhk.thesis.core.Logger;
+import cz.uhk.thesis.core.LogService;
 import cz.uhk.thesis.model.Device;
 import cz.uhk.thesis.model.LltdHelloSubHeaderParser;
 import cz.uhk.thesis.model.Parser;
@@ -75,6 +75,7 @@ public class LltdProbeService implements ProbeService {
             core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_WIRELESS_MODE, p.getWirelessMode());
             core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_IPV6, p.getIpv6());
             core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_MACHINE_NAME, p.getMachineName());
+            core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_BSSID, p.getBSSID());
             
             core.getProbeLoader().NotifyAllModules();
         }
@@ -96,7 +97,7 @@ public class LltdProbeService implements ProbeService {
             state_r += core.getNetworkManager().SendPacket(activeDevice, packet_r);
             state_r += core.getNetworkManager().SendPacket(activeDevice, packet_r);
             if(state_r == Pcap.OK) {
-                Logger.Log2Console(probe.GetModuleName(), "LLTD Reset QD Packet (3) odeslán");
+                LogService.Log2Console(probe.GetModuleName(), "LLTD Reset QD Packet (3) odeslán");
             }
 
 
@@ -104,7 +105,7 @@ public class LltdProbeService implements ProbeService {
             int state_qd = Pcap.OK;
             state_qd += core.getNetworkManager().SendPacket(activeDevice, packet_qd);
             if(state_qd == Pcap.OK) {
-                Logger.Log2Console(probe.GetModuleName(), "LLTD Discovery Packet (1) odeslán");
+                LogService.Log2Console(probe.GetModuleName(), "LLTD Discovery Packet (1) odeslán");
             }
             
         }

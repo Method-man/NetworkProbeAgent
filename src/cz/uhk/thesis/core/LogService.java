@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.List;
+import org.apache.log4j.Logger;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.format.FormatUtils;
 
@@ -16,7 +17,7 @@ import org.jnetpcap.packet.format.FormatUtils;
  * 
  * @author Filip Valenta
  */
-public class Logger {
+public class LogService {
     
     /**
      * Log all objects into the TXT file
@@ -43,6 +44,8 @@ public class Logger {
      */
     public static void Log2Console(Object object, String output)
     {
+        Logger log = Logger.getLogger(Logger.class);
+        // TODO: log.info(output);
         // TODO: log to file
         
         String whoCalls;

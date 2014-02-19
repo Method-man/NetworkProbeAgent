@@ -4,7 +4,7 @@ package cz.uhk.thesis.modules;
 import cz.uhk.thesis.interfaces.ProbeService;
 import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.Core;
-import cz.uhk.thesis.core.Logger;
+import cz.uhk.thesis.core.LogService;
 import cz.uhk.thesis.model.Parser;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.format.FormatUtils;
@@ -44,7 +44,7 @@ public class ArpProbeService implements ProbeService {
             type = "ARP REPLY";
         }
         
-        Logger.Log2Console(this, probe.GetModuleName()+" module: "+type+": "
+        LogService.Log2Console(this, probe.GetModuleName()+" module: "+type+": "
             +FormatUtils.ip(arpHeader.spa())+" to "
             +FormatUtils.ip(arpHeader.tpa()));
         

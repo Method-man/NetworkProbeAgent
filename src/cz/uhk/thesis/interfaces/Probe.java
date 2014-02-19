@@ -33,4 +33,8 @@ public abstract class Probe {
     
     public abstract void InitAfter();
     
+    public String GetTcpdumpFilter() {
+        return "ether proto ip";
+    }
+    
 }

@@ -6,7 +6,7 @@ package cz.uhk.thesis.modules;
 
 import cz.uhk.thesis.core.Core;
 import cz.uhk.thesis.model.LltdHeader;
-import cz.uhk.thesis.core.Logger;
+import cz.uhk.thesis.core.LogService;
 import cz.uhk.thesis.interfaces.Probe;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.JRegistry;
@@ -37,7 +37,7 @@ public class LltdProbe extends Probe {
         try {
             LltdHeader.LLTD_ID = JRegistry.register(LltdHeader.class);
         } catch (RegistryHeaderErrors ex) {
-            Logger.Log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         }
     }
     
@@ -45,6 +45,10 @@ public class LltdProbe extends Probe {
     public void InitAfter() {
         
     }
-    
+
+    @Override
+    public String GetTcpdumpFilter() {
+        return "ether proto 0x"+Integer.toHexString(LltdHeader.ETHERNET_HEADER_LLTD);
+    }
     
 }

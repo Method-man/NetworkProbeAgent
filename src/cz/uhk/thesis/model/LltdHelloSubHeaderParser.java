@@ -1,7 +1,7 @@
 
 package cz.uhk.thesis.model;
 
-import cz.uhk.thesis.core.Logger;
+import cz.uhk.thesis.core.LogService;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -43,6 +43,7 @@ public class LltdHelloSubHeaderParser implements Parser {
     byte[] headerData;
     
     private byte[] bMac             = new byte[LEN_HOST_ID];
+    private byte[] bBSSID           = new byte[LEN_BSSID];
     private byte[] bIpv4            = new byte[LEN_IPV4];
     private byte[] bIpv6            = new byte[LEN_IPV6];
     private byte[] bLinkSpeed       = new byte[LEN_LINK_SPEED];
@@ -66,6 +67,16 @@ public class LltdHelloSubHeaderParser implements Parser {
     public String getHostIdMacAddress()
     {
         return FormatUtils.mac(bMac);
+    }
+    
+    /**
+     * Returns x. element BSSID - router/AP id
+     * 
+     * @return 
+     */
+    public String getBSSID()
+    {
+        return FormatUtils.mac(bBSSID);
     }
     
     /**
@@ -173,14 +184,14 @@ public class LltdHelloSubHeaderParser implements Parser {
                 try {
                     sMachineName = new String(bMachineName, "UTF-16LE");
                 } catch (UnsupportedEncodingException ex) {
-                    Logger.Log2ConsoleError(this, ex);
+                    LogService.Log2ConsoleError(this, ex);
                 }
             } break;
             case TYPE_CHARACTERISTICS: {
                 // TODO:
             } break;
             case TYPE_BSSID: {
-                // TODO:
+                bBSSID = Arrays.copyOfRange(headerData, pointer2data, pointer2data+length);
             } break;
             case TYPE_SSID: {
                 // TODO:
@@ -192,7 +203,7 @@ public class LltdHelloSubHeaderParser implements Parser {
                 // TODO:
             } break;
             default: {
-                // Logger.Log2Console(this, "neznamy typ");
+                // LogService.Log2Console(this, "neznamy typ");
             }
         }
     }

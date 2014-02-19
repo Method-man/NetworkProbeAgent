@@ -10,14 +10,17 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jnetpcap.Pcap;
+import org.jnetpcap.PcapBpfProgram;
 import org.jnetpcap.PcapExtensionNotAvailableException;
 import org.jnetpcap.PcapIf;
 import org.jnetpcap.packet.PcapPacket;
@@ -40,6 +43,8 @@ public class NetworkManager {
     public static final int MODE_INTERFACE_TEST = 1;
     
     public static final byte[] BROADCAST_MAC_ADDRESS = {(byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,};
+    
+    private Set<String> filterExpressions = new HashSet<String>();
     
     public enum ExcludeMasks {
         NETWORK_IP_DEFAULT_GATEWAY("^0\\.0\\.0\\.0$"),
@@ -126,7 +131,7 @@ public class NetworkManager {
 
         int result = Pcap.findAllDevs(alldevs, errbuf);
         if (result != Pcap.OK || alldevs.isEmpty()) {
-            Logger.Log2Console(this, "Chyba, nemohu načíst síťová zařízení: " + errbuf.toString());
+            LogService.Log2Console(this, "Chyba, nemohu načíst síťová zařízení: " + errbuf.toString());
         } else {
             int i = 0;
             for(PcapIf interfc : alldevs) {
@@ -166,6 +171,7 @@ public class NetworkManager {
             if(Pcap.isPcap100Loaded()) {
                 pcap = Pcap.create(device.getName(), errbuf);
                 preparePcapDevice(pcap);
+                preparePcapFilter(pcap);
             } else {
                 throw new PcapExtensionNotAvailableException();
             }
@@ -242,9 +248,9 @@ public class NetworkManager {
                 
             }
         } catch (UnknownHostException ex) {
-            Logger.Log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         } catch (IOException ex) {
-            Logger.Log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         }
     }
     
@@ -316,7 +322,7 @@ public class NetworkManager {
         try {
             return activeDevice.getHardwareAddress();
         } catch (IOException ex) {
-            Logger.Log2Console(this, "chyba zjisteni MAC adresy");
+            LogService.Log2Console(this, "chyba zjisteni MAC adresy");
         }
         return null;
     }
@@ -324,6 +330,16 @@ public class NetworkManager {
     public String GetDeviceIP(PcapIf pcapif)
     {
         return FormatUtils.ip(pcapif.getAddresses().get(0).getAddr().getData());
+    }
+    
+    /**
+     * Add expression filter for future usage
+     * 
+     * @param expression 
+     */
+    public void Add2Filter(String expression)
+    {
+        filterExpressions.add(expression);
     }
     
     private void preparePcapDevice(Pcap pcap)
@@ -334,6 +350,33 @@ public class NetworkManager {
         pcap.setDirection(Pcap.Direction.INOUT);
         pcap.setBufferSize(128 * 1024 * 1024); // Set ring-buffer to 128Mb
         pcap.activate();
+    }
+    
+    private void preparePcapFilter(Pcap pcap)
+    {
+        PcapBpfProgram program = new PcapBpfProgram();
+		int optimize = 1;         // 0 = false
+		int netmask = 0xFFFFFF00; // TODO: aktualni masku, k detekci broadcast adres
+        
+        StringBuffer sb = new StringBuffer();
+        boolean first = true;
+        for(String expression: filterExpressions) {
+            if(expression.equals("")) continue;
+            if(!first) sb.append(" or ");
+            sb.append(expression);
+            first = false;
+        }
+        LogService.Log2Console(this, sb.toString());
+        
+		if (pcap.compile(program, sb.toString(), optimize, netmask) != Pcap.OK) {
+			LogService.Log2Console(this, pcap.getErr());
+			return;
+		}
+		
+		if (pcap.setFilter(program) != Pcap.OK) {
+			LogService.Log2Console(this, pcap.getErr());
+			return;		
+		}
     }
     
 }
