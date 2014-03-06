@@ -76,4 +76,9 @@ public class DeviceManager {
         }
     }
     
+    public HashMap<String, Device> GetAllDevices()
+    {
+        return devices;
+    }
+    
 }

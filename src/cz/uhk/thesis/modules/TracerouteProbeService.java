@@ -49,6 +49,9 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
         // function A - Obtain gateway MAC
         TracerouteProbe probeTraceroute = ((TracerouteProbe)probe);
         if(probeTraceroute.useThisModuleObtainGatewayMac(packet)) {
+            
+            // TODO: presunout cely obsah do metody
+            
             Ethernet e = packet.getHeader(new Ethernet());
             Device d = core.GetDeviceManager().getDevice(e.source());
             d.setIsGateway(true);
@@ -72,6 +75,10 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                 addIp2RouteFromPacket(packet, destination);
                 LogService.Log2Console(this, "traceroute done");
                 core.getProbeLoader().NotifyAllModules();
+                
+                // DEBUG:
+                core.getProbeLoader().GetAdapterService().ServerSendXML(core);
+                
             }
         }
     }

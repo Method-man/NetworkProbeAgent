@@ -8,9 +8,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.List;
-import org.apache.log4j.Logger;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.format.FormatUtils;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * Static access to logable outputs
@@ -36,6 +37,16 @@ public class LogService {
         } catch (IOException ex) { }
     }
     
+    public static void Log2FileXML(String data, String filename)
+    {
+        Writer writer;
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "utf-8"));
+            writer.write(data);
+            writer.close();
+        } catch (IOException ex) { }
+    }
+    
     /**
      * Print to console
      * 
@@ -44,7 +55,9 @@ public class LogService {
      */
     public static void Log2Console(Object object, String output)
     {
-        Logger log = Logger.getLogger(Logger.class);
+        System.setProperty("log4j.configurationFile", "log4j2.xml");
+        Logger log = LogManager.getLogger(object.getClass().getCanonicalName());
+        log.info(output);
         // TODO: log.info(output);
         // TODO: log to file
         
@@ -54,7 +67,7 @@ public class LogService {
         } else {
             whoCalls = object.getClass().getSimpleName().toString();
         }
-        System.out.println(whoCalls+": "+output);
+        // System.out.println(whoCalls+": "+output);
     }
     
     /**

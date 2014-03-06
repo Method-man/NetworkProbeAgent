@@ -46,7 +46,7 @@ public class NetworkDiscovery {
             
             BufferedImage img = null;
             try {
-            img = ImageIO.read(new File("images/icon-16x16.png"));
+            img = ImageIO.read(new File("icon-16x16.png"));
             } catch (IOException e) {
                 LogService.Log2Console(this, "SystemTray error reading image file");
             }

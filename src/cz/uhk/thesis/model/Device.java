@@ -103,6 +103,11 @@ public class Device {
         this.isGateway = isGateway;
     }  
     
+    public HashMap<byte[], Integer> GetRoute2Internet()
+    {
+        return route2internet;
+    }
+    
     @Override
     public String toString()
     {

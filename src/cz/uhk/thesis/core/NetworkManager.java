@@ -242,7 +242,7 @@ public class NetworkManager {
                 
                 if(IsRealDeviceFilter(interfc.getValue()) && localIp.isReachable(2000) && localIp instanceof Inet4Address) {
                     setActiveDevice(interfc.getValue());
-                    System.out.println("nalezeno aktivní rozhraní: "+GetDeviceIP(interfc.getValue()));
+                    LogService.Log2Console(this, "nalezeno aktivní rozhraní: "+GetDeviceIP(interfc.getValue()));
                     break;
                 }
                 
@@ -283,7 +283,7 @@ public class NetworkManager {
         mainLoopExecutor.submit(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
-                System.out.println("Core: spouštím smyčku odchytávání packetů");
+                LogService.Log2Console(this, "Core: spouštím smyčku odchytávání packetů");
                 return catchPackets(
                     getActiveDevice(), 
                     core, 

@@ -12,6 +12,7 @@ import cz.uhk.thesis.interfaces.DeviceObserver;
 import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.interfaces.ProbeFactory;
 import cz.uhk.thesis.interfaces.Stateful;
+import cz.uhk.thesis.modules.AdapterService;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,9 @@ public class ProbeLoader extends Stateful {
     
     private final List<Probe> probes = new ArrayList<>();
     private final Core core;
+    
+    private static final int APP_STATE_IN_PROCESS = 1;
+    private static final int APP_STATE_TRACEROUTE_MODULE_OK = 2;
     
     public ProbeLoader(Core core)
     {
@@ -47,7 +51,7 @@ public class ProbeLoader extends Stateful {
         for(Probe p: probes) {
             p.InitBefore();
             core.getNetworkManager().Add2Filter(p.GetTcpdumpFilter());
-            System.out.println("inicializuji modul: "+p.GetModuleName());
+            LogService.Log2Console(this, "inicializuji modul: "+p.GetModuleName());
         }
     }
     
@@ -79,6 +83,14 @@ public class ProbeLoader extends Stateful {
         // napriklad has gateway se presune sem, traceroute se presune sem
         
         // TODO: if in state all done > AdapterService > send XML 2 server
+        if(state == APP_STATE_TRACEROUTE_MODULE_OK) {
+            
+        }
+    }
+    
+    public AdapterService GetAdapterService()
+    {
+        return new AdapterService();
     }
     
 }
