@@ -2,6 +2,7 @@
 package cz.uhk.thesis.interfaces;
 
 import cz.uhk.thesis.core.Core;
+import cz.uhk.thesis.model.ScheduleJobCrate;
 import org.jnetpcap.packet.JPacket;
 
 /**
@@ -35,6 +36,10 @@ public abstract class Probe {
     
     public String GetTcpdumpFilter() {
         return "ether proto ip";
+    }
+    
+    public ScheduleJobCrate Schedule() {
+        return null;
     }
     
 }

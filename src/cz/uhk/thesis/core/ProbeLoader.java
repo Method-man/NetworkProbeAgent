@@ -12,9 +12,24 @@ import cz.uhk.thesis.interfaces.DeviceObserver;
 import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.interfaces.ProbeFactory;
 import cz.uhk.thesis.interfaces.Stateful;
+import cz.uhk.thesis.model.ScheduleJobCrate;
 import cz.uhk.thesis.modules.AdapterService;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.quartz.CronTrigger;
+import org.quartz.Job;
+import static org.quartz.JobBuilder.newJob;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionException;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import static org.quartz.TriggerBuilder.newTrigger;
+import org.quartz.impl.StdSchedulerFactory;
 
 /**
  *
@@ -48,10 +63,27 @@ public class ProbeLoader extends Stateful {
     
     public void InitBeforeProbes()
     {
-        for(Probe p: probes) {
-            p.InitBefore();
-            core.getNetworkManager().Add2Filter(p.GetTcpdumpFilter());
-            LogService.Log2Console(this, "inicializuji modul: "+p.GetModuleName());
+        try {
+            Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
+            scheduler.start();
+            
+            for(Probe p: probes) {
+                p.InitBefore();
+                LogService.Log2Console(this, "inicializuji modul: "+p.GetModuleName());
+                core.getNetworkManager().Add2Filter(p.GetTcpdumpFilter());
+                LogService.Log2Console(p, "pridavam filtr");
+                ScheduleJobCrate sjc = p.Schedule();
+                if(sjc != null) {
+                    SchedulePrepare(scheduler, sjc, p);
+                    LogService.Log2Console(p, "uloha naplanovana");
+                }
+            }
+            
+            // scheduler.shutdown();
+        } catch (JobExecutionException ex) {
+            LogService.Log2ConsoleError(this, ex);
+        } catch(SchedulerException ex) {
+            LogService.Log2ConsoleError(this, ex);
         }
     }
     
@@ -91,6 +123,30 @@ public class ProbeLoader extends Stateful {
     public AdapterService GetAdapterService()
     {
         return new AdapterService();
+    }
+    
+    /**
+     * Add scheduled event to scheduler
+     * 
+     * @param sjc 
+     */
+    private void SchedulePrepare(Scheduler scheduler, ScheduleJobCrate sjc, Probe probe) throws SchedulerException
+    {
+        Map data = new HashMap();
+        data.put("core",core);
+        data.put("probe",probe);
+        
+        JobDetail job = newJob(sjc.getJobClass())
+            .usingJobData(new JobDataMap(data))
+            .withIdentity(sjc.getJobIdentity(), sjc.getJobGroup())
+            .build();
+
+        CronTrigger trigger = newTrigger()
+            .withIdentity(sjc.getTriggerIndentity(), sjc.getTriggerGroup())
+            .withSchedule(sjc.getCronScheduleBuilder())
+            .build();
+
+        scheduler.scheduleJob(job, trigger);
     }
     
 }

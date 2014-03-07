@@ -24,12 +24,14 @@ import javax.swing.JFrame;
  *
  * @author Filip Valenta
  */
-public class NetworkDiscovery {
+public class NetworkProbeAgent {
     
     private final Core core;
 
-    public NetworkDiscovery() 
+    public NetworkProbeAgent() 
     {
+        System.setProperty("log4j.configurationFile", "log4j2.xml");
+        
         core = new Core();
         core.Init();
         
@@ -128,7 +130,7 @@ public class NetworkDiscovery {
      */
     public static void main(String[] args) {
 
-        new NetworkDiscovery();
+        new NetworkProbeAgent();
         
     }
 

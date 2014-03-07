@@ -55,19 +55,14 @@ public class LogService {
      */
     public static void Log2Console(Object object, String output)
     {
-        System.setProperty("log4j.configurationFile", "log4j2.xml");
-        Logger log = LogManager.getLogger(object.getClass().getCanonicalName());
-        log.info(output);
-        // TODO: log.info(output);
-        // TODO: log to file
-        
-        String whoCalls;
+        String caller;
         if(object instanceof String) {
-            whoCalls = (String) object;
+            caller = (String) object;
         } else {
-            whoCalls = object.getClass().getSimpleName().toString();
+            caller = object.getClass().getSimpleName().toString();
         }
-        // System.out.println(whoCalls+": "+output);
+        Logger log = LogManager.getLogger(caller);
+        log.info(output);
     }
     
     /**
