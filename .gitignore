@@ -1,2 +1,5 @@
 /build
 /nbproject
+/dist/
+/logs
+/logs-old

@@ -25,7 +25,7 @@ public class LogService {
      * 
      * @param devices List<Device>
      */
-    public static void Log2File(List<Device> devices)
+    public static void LogDeviceList(List<Device> devices)
     {
         Writer writer;
         try {
@@ -34,17 +34,21 @@ public class LogService {
                 writer.write(d.toString()+"\r\n");
             }
             writer.close();
-        } catch (IOException ex) { }
+        } catch (IOException ex) {
+            Log2ConsoleError(LogService.class, ex);
+        }
     }
     
-    public static void Log2FileXML(String data, String filename)
+    public static void Log2xmlFile(String xmlData, String filename)
     {
         Writer writer;
         try {
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "utf-8"));
-            writer.write(data);
+            writer.write(xmlData);
             writer.close();
-        } catch (IOException ex) { }
+        } catch (IOException ex) { 
+            Log2ConsoleError(LogService.class, ex);
+        }
     }
     
     /**
@@ -55,13 +59,7 @@ public class LogService {
      */
     public static void Log2Console(Object object, String output)
     {
-        String caller;
-        if(object instanceof String) {
-            caller = (String) object;
-        } else {
-            caller = object.getClass().getSimpleName().toString();
-        }
-        Logger log = LogManager.getLogger(caller);
+        Logger log = LogManager.getLogger(caller(object));
         log.info(output);
     }
     
@@ -73,9 +71,8 @@ public class LogService {
      */
     public static void Log2ConsoleError(Object object, Exception exceptionMessage)
     {
-        // TODO: log to file
-        
-        System.out.println("EXCEPTION: " + exceptionMessage.getMessage());
+        Logger log = LogManager.getLogger(caller(object));
+        log.error(exceptionMessage.getMessage());
     }
     
     /**
@@ -83,10 +80,10 @@ public class LogService {
      * 
      * @param packet 
      */
-    public static void Log2ConsolePacket(JPacket packet)
+    public static void LogPacket2Console(JPacket packet)
     {
-        System.out.println(packet.getState().toDebugString());
-        System.out.println(packet);
+        Log2Console(LogService.class, packet.getState().toDebugString());
+        Log2Console(LogService.class, packet.toString());
     }
     
     /**
@@ -108,6 +105,23 @@ public class LogService {
         } else {
             System.out.println("unsuported hex input");
         }
+    }
+    
+    /**
+     * Parse caller
+     * 
+     * @param object
+     * @return 
+     */
+    private static String caller(Object object)
+    {
+        String caller = "";
+        if(object instanceof String) {
+            caller = (String) object;
+        } else {
+            caller = object.getClass().getSimpleName().toString();
+        }
+        return caller;
     }
     
 }

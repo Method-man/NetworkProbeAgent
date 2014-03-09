@@ -9,11 +9,15 @@ import cz.uhk.thesis.interfaces.DeviceObserver;
 import cz.uhk.thesis.model.Device;
 import cz.uhk.thesis.model.Parser;
 import cz.uhk.thesis.interfaces.Stateful;
+import static cz.uhk.thesis.interfaces.Stateful.STATE_INITIAL;
 import cz.uhk.thesis.model.IcmpPacket;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapIf;
 import org.jnetpcap.packet.JPacket;
@@ -36,6 +40,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
     private final Core core;
     
     private int tracerouteTtl = 1;
+    private int tracerouteTimeoutSeconds = 4; // default traceroute timeout
     private byte[] ip;
     
     public TracerouteProbeService(Core core, Probe probe)
@@ -57,9 +62,8 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
             d.setIsGateway(true);
             if(IsInState(STATE_INITIAL)) {
                 SetState(STATE_HAS_GATEWAY);
-                LogService.Log2Console(this, "nastavuji stav "+STATE_HAS_GATEWAY);
             }
-            core.getProbeLoader().NotifyAllModules();
+            
         }
         // function B - Traceroute
         if(probeTraceroute.useThisModuleTraceroute(packet)) {
@@ -73,12 +77,6 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
             } else if(requiredDestination || type == IcmpType.ECHO_REPLY_ID) { // je to cilova destinace nebo odpovedel nalezeno
                 SetState(STATE_TRACEROUTE_DONE);
                 addIp2RouteFromPacket(packet, destination);
-                LogService.Log2Console(this, "traceroute done");
-                core.getProbeLoader().NotifyAllModules();
-                
-                // DEBUG:
-                core.getProbeLoader().GetAdapterService().ServerSendXML(core);
-                
             }
         }
     }
@@ -88,6 +86,16 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
         Ethernet e = packet.getHeader(new Ethernet());
         Device d = core.GetDeviceManager().getDevice(e.source());
         d.AddRoute2internet(destination);
+    }
+    
+    private void addIp2Route(byte[] destination)
+    {
+        Device d = core.GetDeviceManager().GetGateway();
+        if(d != null) {
+            d.AddRoute2internet(destination);
+        } else {
+            LogService.Log2Console(this, "pokus o pridani traceroute ip do null device");
+        }
     }
 
     @Override
@@ -146,6 +154,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
         if(IsInState(STATE_HAS_GATEWAY)) {
             tracerouteTtl = 1;
             TracerouteSend();
+            checkTraceroute();
         }
     }
 
@@ -166,6 +175,11 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
             } break;
             default: this.state = STATE_INITIAL; break;
         }
+        LogService.Log2Console(this, "nastavuji stav "+this.state);
+        core.getProbeLoader().NotifyAllModules();
+        
+        // TODO: prozatim odesilam vzdy, potom se to bude odesialt pri jine prilezitosti
+        core.getAdapterService().ServerXmlSend(core);
     }    
 
     @Override
@@ -194,8 +208,27 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
     
     public String GetTracerouteHostTestHostname()
     {
-        // TODO: move to settings
-        return "www.seznam.cz";
+        return core.getAdapterService().getTracerouteHostname();
+    }
+    
+    private void checkTraceroute()
+    {
+        ScheduledExecutorService mainLoopExecutor = Executors.newScheduledThreadPool(1);
+        mainLoopExecutor.schedule(new Runnable() {
+            @Override
+            public void run() {
+                LogService.Log2Console(this, "traceroute bez odpovedi, nahrazuji defaultni cestou");
+                try {
+                    for(String sIp: core.getAdapterService().getTracerouteDefault()) {
+                        InetAddress ip = InetAddress.getByName(sIp);
+                        addIp2Route(ip.getAddress());
+                    }
+                    SetState(STATE_TRACEROUTE_DONE);
+                } catch (UnknownHostException ex) {
+                    LogService.Log2ConsoleError(this, ex);
+                }
+            }
+        }, tracerouteTimeoutSeconds, TimeUnit.SECONDS);
     }
     
 }

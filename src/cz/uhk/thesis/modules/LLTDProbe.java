@@ -56,7 +56,7 @@ public class LltdProbe extends Probe {
     @Override
     public ScheduleJobCrate Schedule() {
         return new ScheduleJobCrate(LltdProbeSchedule.class, "job-lltd", "group-lltd", "trigger-lltd", "group-lltd", 
-            cronSchedule("0 0/2 * * * ?") // kazdych 2 minuty
+            cronSchedule("0 0/1 * * * ?") // kazdou minutu
         );
     }
     

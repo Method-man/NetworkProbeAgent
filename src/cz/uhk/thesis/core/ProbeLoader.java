@@ -18,10 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.quartz.CronTrigger;
-import org.quartz.Job;
 import static org.quartz.JobBuilder.newJob;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -43,8 +40,19 @@ public class ProbeLoader extends Stateful {
     private static final int APP_STATE_IN_PROCESS = 1;
     private static final int APP_STATE_TRACEROUTE_MODULE_OK = 2;
     
+    Scheduler scheduler = null;
+    
     public ProbeLoader(Core core)
     {
+        try {
+            scheduler = StdSchedulerFactory.getDefaultScheduler();
+            scheduler.start();
+        } catch (JobExecutionException ex) {
+            LogService.Log2ConsoleError(this, ex);
+        } catch(SchedulerException ex) {
+            LogService.Log2ConsoleError(this, ex);
+        }
+        
         this.core = core;
         ProbeFactory pf = new ArpProbeFactory(core);
         probes.add(pf.getProbe());
@@ -64,9 +72,6 @@ public class ProbeLoader extends Stateful {
     public void InitBeforeProbes()
     {
         try {
-            Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
-            scheduler.start();
-            
             for(Probe p: probes) {
                 p.InitBefore();
                 LogService.Log2Console(this, "inicializuji modul: "+p.GetModuleName());
@@ -74,7 +79,7 @@ public class ProbeLoader extends Stateful {
                 LogService.Log2Console(p, "pridavam filtr");
                 ScheduleJobCrate sjc = p.Schedule();
                 if(sjc != null) {
-                    SchedulePrepare(scheduler, sjc, p);
+                    SchedulePrepare(sjc, p);
                     LogService.Log2Console(p, "uloha naplanovana");
                 }
             }
@@ -130,7 +135,7 @@ public class ProbeLoader extends Stateful {
      * 
      * @param sjc 
      */
-    private void SchedulePrepare(Scheduler scheduler, ScheduleJobCrate sjc, Probe probe) throws SchedulerException
+    public void SchedulePrepare(ScheduleJobCrate sjc, Probe probe) throws SchedulerException
     {
         Map data = new HashMap();
         data.put("core",core);

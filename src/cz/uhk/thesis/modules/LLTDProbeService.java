@@ -70,6 +70,9 @@ public class LltdProbeService implements ProbeService {
             core.GetDeviceManager().getDevice(mac).setInfo(Device.DEVICE_BSSID, p.getBSSID());
             
             core.getProbeLoader().NotifyAllModules();
+            
+            // TODO: prozatim odesilame vzdy, potom se to ale bude odesilat jen pri presne prilezitosti
+            core.getAdapterService().ServerXmlSend(core);
         }
     }
 

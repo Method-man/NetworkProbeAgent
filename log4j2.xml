@@ -1,30 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration packages="">
     <Properties>
-		<property name="name">network probe agent</property>
-        <property name="pattern">%d{yyyy-MM-dd HH:mm:ss.SSS} | %-5.5p | %-10.10t | %-20.20C:%-5.5L | %msg%n</property>
+        <property name="name">network probe agent</property>
+        <property name="pattern">%d{MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</property>
     </Properties>
-  <Appenders>
-    <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"/>
-    </Console>
-    <RollingFile name="RollingFile" fileName="logs/${name}.log"
-				 filePattern="logs/${date:yyyy-MM}/${name}-%d{yyyy-MM-dd}-%i.log.gz">
-			<PatternLayout>
-				<pattern>${pattern}</pattern>
-			</PatternLayout>
-			<Policies>
-				<TimeBasedTriggeringPolicy /><!-- Rotated everyday -->
-				<SizeBasedTriggeringPolicy size="100 MB"/> <!-- Or every 100 MB -->
-			</Policies>
-		</RollingFile>
-  </Appenders>
-  <Loggers>
-      
-    <Root level="info">
-      <AppenderRef ref="Console"/>
-      <AppenderRef ref="RollingFile"/>
-    </Root>
-    
-  </Loggers>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${pattern}"/>
+        </Console>
+        <RollingFile name="RollingFile" 
+                     fileName="logs/${name}.log" 
+                     filePattern="logs/${date:yyyy-MM}/${name}-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout>
+                <pattern>${pattern}</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy /><!-- Rotated everyday -->
+                <SizeBasedTriggeringPolicy size="100 MB"/> <!-- Or every 100 MB -->
+            </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+    </Loggers>
 </Configuration>

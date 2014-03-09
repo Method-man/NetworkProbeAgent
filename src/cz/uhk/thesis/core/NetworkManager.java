@@ -117,7 +117,9 @@ public class NetworkManager {
     {
         boolean isValid = true;
         
-        if(mac.matches(NetworkManager.ExcludeMasks.NETWORK_MAC_NULL.getMask())) isValid = false;
+        if(mac == null) isValid = false;
+        else if(mac.equals("")) isValid = false;
+        else if(mac.matches(NetworkManager.ExcludeMasks.NETWORK_MAC_NULL.getMask())) isValid = false;
         
         return isValid;
     }

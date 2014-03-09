@@ -4,6 +4,8 @@
 
 package cz.uhk.thesis.core;
 
+import cz.uhk.thesis.modules.AdapterService;
+
 /**
  *
  * @author Filip Valenta
@@ -13,10 +15,12 @@ public class Core {
     private NetworkManager network;
     private ProbeLoader probeLoader;
     private DeviceManager deviceManager;
+    private AdapterService adapterService;
     
     public void Init()
     {
         deviceManager = new DeviceManager();
+        adapterService = new AdapterService();
         
         network = new NetworkManager(this);
         network.LoadNetworkInterfaces();
@@ -45,6 +49,10 @@ public class Core {
 
     public ProbeLoader getProbeLoader() {
         return probeLoader;
+    }
+    
+    public AdapterService getAdapterService() {
+        return adapterService;
     }
     
 }

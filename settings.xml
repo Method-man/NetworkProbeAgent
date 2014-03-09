@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Traceroute>
+    <Route>
+      <Ip>10.0.0.138</Ip>
+      <Ip>77.75.72.3</Ip>
+    </Route>
+    <Hostname>www.seznam.cz</Hostname>
+  </Traceroute>
+</Configuration>

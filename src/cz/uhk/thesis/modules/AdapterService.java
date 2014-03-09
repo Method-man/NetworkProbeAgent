@@ -2,8 +2,17 @@
 package cz.uhk.thesis.modules;
 
 import cz.uhk.thesis.core.Core;
+import cz.uhk.thesis.core.DeviceManager;
 import cz.uhk.thesis.core.LogService;
+import cz.uhk.thesis.core.NetworkManager;
 import cz.uhk.thesis.model.Device;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -12,8 +21,10 @@ import org.jnetpcap.packet.format.FormatUtils;
  
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSSerializer;
+import org.xml.sax.SAXException;
 
 /**
  * Service for messaging between ISP XML server and application
@@ -22,17 +33,33 @@ import org.w3c.dom.ls.LSSerializer;
  */
 public class AdapterService {
     
+    private String tracerouteHostname = "";
+    private List<String> tracerouteDefault = new ArrayList<>();
+
+    
+    public AdapterService() {
+        ServerXmlGetSettings();
+    }
+    
+    public String getTracerouteHostname() {
+        return tracerouteHostname;
+    }
+
+    public List<String> getTracerouteDefault() {
+        return tracerouteDefault;
+    }
+    
     /**
      * Send XML containing info about found out devices and relations
      * @param c
      */
-    public void ServerSendXML(Core c)
+    public void ServerXmlSend(Core c)
     {
         String xml;
         try {
             xml = prepareXML(c);
             LogService.Log2Console(this, xml);
-            LogService.Log2FileXML(xml, "export.xml");
+            LogService.Log2xmlFile(xml, "export.xml");
         } catch (ParserConfigurationException ex) {
             LogService.Log2ConsoleError(this, ex);
         }
@@ -40,10 +67,28 @@ public class AdapterService {
     
     /**
      * Get settings XML from server
+     * 
+     * TODO: from server
      */
-    public void ServerGetXMLSettings()
+    private void ServerXmlGetSettings()  
     {
-        // TODO:
+        try {
+            File fXmlFile = new File("settings.xml");
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(fXmlFile);
+            doc.getDocumentElement().normalize();
+            
+            tracerouteHostname = doc.getElementsByTagName("Hostname").item(0).getTextContent();
+            NodeList nl = ((Element)doc.getElementsByTagName("Route").item(0)).getElementsByTagName("Ip");
+            for(int i = 0; i < nl.getLength(); i++) {
+                tracerouteDefault.add(nl.item(i).getTextContent());
+                LogService.Log2Console(this, "defaultni route ip "+i+" "+nl.item(i).getTextContent());
+            }
+            
+        } catch (ParserConfigurationException | IOException | SAXException ex) {
+            LogService.Log2ConsoleError(this, ex);
+        }
     }
     
     private String prepareXML(Core c) throws ParserConfigurationException
@@ -54,7 +99,13 @@ public class AdapterService {
         // root elements
 		Document doc = docBuilder.newDocument();
 		Element lltd = doc.createElement("lltd");
-        lltd.setAttribute("publicIP", "xxx.xxx.xxx.xxx"); // TODO: ip + attribute milis ?
+        String publicIP = "";
+        try {
+            publicIP = getPublicIP();
+        } catch(IOException ex) {
+            LogService.Log2ConsoleError(this, ex);
+        }
+        lltd.setAttribute("publicIP", publicIP);
 		doc.appendChild(lltd);
         
         // traceroute
@@ -86,17 +137,58 @@ public class AdapterService {
             lltd.appendChild(device);
         }
         
-        /**
-         * TODO:
-         * 
-         * <relation from="20:2b:c1:95:1a:10" to="14:49:e0:55:5b:7c">
-         * <medium>02</medium>
-         * </relation>
-         */
+        relationMapper(doc, lltd, c.GetDeviceManager(), c.getNetworkManager());
         
         DOMImplementationLS domImplementation = (DOMImplementationLS) doc.getImplementation();
         LSSerializer lsSerializer = domImplementation.createLSSerializer();
         return lsSerializer.writeToString(doc); 
+    }
+    
+    /**
+     * Make relations beetween devices for xml representation
+     * 
+     * Example relation:
+     * <relation from="20:2b:c1:95:1a:10" to="14:49:e0:55:5b:7c">
+     * <medium>02</medium>
+     * </relation>
+     * 
+     * @param rootElement
+     * @param devices 
+     */
+    private void relationMapper(Document doc, Element rootElement, DeviceManager deviceManager, NetworkManager networkManager)
+    {
+        Device gateway = deviceManager.GetGateway();
+        for(Entry<String, Device> deviceEntry: deviceManager.GetAllDevices().entrySet()) {
+            Device device = deviceEntry.getValue();
+            if(!device.IsGateway()) { // TODO: zjistit zda se tam ma pridavat i gateway
+                String sMacFrom = device.getInfo(Device.DEVICE_BSSID);
+                String sMacTo = device.getMac();
+                // connect to default gateway instead of null or invalid mac
+                if(!networkManager.isValidMac(sMacFrom)) {
+                    sMacFrom = gateway.getMac();
+                }
+                Element relation = doc.createElement("relation");
+                relation.setAttribute("from", sMacFrom);
+                relation.setAttribute("to", sMacTo);
+                
+                // TODO: proverit medium zda delame stejne jako u kolegy
+                Element medium = doc.createElement("medium");
+                medium.appendChild(doc.createTextNode(device.getInfo(Device.DEVICE_PHYSICAL_MEDIUM)));
+                relation.appendChild(medium);
+                rootElement.appendChild(relation);
+            }
+        }
+        
+    }
+    
+    private String getPublicIP() throws IOException 
+    {
+        URL whatismyip = new URL("http://checkip.amazonaws.com");
+        BufferedReader in = new BufferedReader(new InputStreamReader(whatismyip.openStream()));
+        String publicIP = in.readLine(); // vraci IP jako string
+        in.close();
+        
+        return publicIP;
     }
     
 }

@@ -72,7 +72,7 @@ public class DeviceManager {
         LogService.Log2Console(this, "ukladam nove info");
         if(DevicesCount() > 0) {
             List<Device> d = new ArrayList<>(devices.values());
-            LogService.Log2File(d);
+            LogService.LogDeviceList(d);
         }
     }
     
