@@ -40,7 +40,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
     private final Core core;
     
     private int tracerouteTtl = 1;
-    private int tracerouteTimeoutSeconds = 4; // default traceroute timeout
+    private int tracerouteTimeoutSeconds = 15; // default traceroute timeout 4 s
     private byte[] ip;
     
     public TracerouteProbeService(Core core, Probe probe)
@@ -217,6 +217,9 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
         mainLoopExecutor.schedule(new Runnable() {
             @Override
             public void run() {
+                
+                if(tracerouteTtl > 1) return; // traceroute je OK
+                
                 LogService.Log2Console(this, "traceroute bez odpovedi, nahrazuji defaultni cestou");
                 try {
                     for(String sIp: core.getAdapterService().getTracerouteDefault()) {

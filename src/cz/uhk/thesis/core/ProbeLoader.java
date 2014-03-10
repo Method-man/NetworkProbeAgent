@@ -134,6 +134,8 @@ public class ProbeLoader extends Stateful {
      * Add scheduled event to scheduler
      * 
      * @param sjc 
+     * @param probe 
+     * @throws org.quartz.SchedulerException 
      */
     public void SchedulePrepare(ScheduleJobCrate sjc, Probe probe) throws SchedulerException
     {
