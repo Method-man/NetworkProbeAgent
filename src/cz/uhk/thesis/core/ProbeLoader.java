@@ -32,13 +32,10 @@ import org.quartz.impl.StdSchedulerFactory;
  *
  * @author Filip Valenta
  */
-public class ProbeLoader extends Stateful {
+public class ProbeLoader {
     
     private final List<Probe> probes = new ArrayList<>();
     private final Core core;
-    
-    private static final int APP_STATE_IN_PROCESS = 1;
-    private static final int APP_STATE_TRACEROUTE_MODULE_OK = 2;
     
     Scheduler scheduler = null;
     
@@ -111,17 +108,6 @@ public class ProbeLoader extends Stateful {
             if(p.GetProbeService() instanceof DeviceObserver) {
                 ((DeviceObserver)p.GetProbeService()).Notify();
             }
-        }
-    }
-
-    @Override
-    public void SetState(int state) {
-        // TODO: celkove stavy aplikace, nikoli modulu... 
-        // napriklad has gateway se presune sem, traceroute se presune sem
-        
-        // TODO: if in state all done > AdapterService > send XML 2 server
-        if(state == APP_STATE_TRACEROUTE_MODULE_OK) {
-            
         }
     }
     

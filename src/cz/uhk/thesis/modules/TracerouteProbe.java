@@ -30,6 +30,9 @@ public class TracerouteProbe extends Probe {
         boolean use = false;
         use |= useThisModuleObtainGatewayMac(packet);
         use |= useThisModuleTraceroute(packet);
+        
+        // do not track icmp packets any more, those packets are probably for another (ping) module
+        use &= !((TracerouteProbeService)probeService).IsInState(TracerouteProbeService.STATE_TRACEROUTE_DONE);
         return use;
     }
     

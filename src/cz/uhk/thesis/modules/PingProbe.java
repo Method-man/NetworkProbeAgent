@@ -9,6 +9,7 @@ package cz.uhk.thesis.modules;
 import cz.uhk.thesis.core.Core;
 import cz.uhk.thesis.interfaces.Probe;
 import org.jnetpcap.packet.JPacket;
+import org.jnetpcap.protocol.network.Icmp;
 
 /**
  *
@@ -27,7 +28,7 @@ public class PingProbe extends Probe {
 
     @Override
     public boolean useThisModule(JPacket packet) {
-        return false;
+        return packet.hasHeader(new Icmp());
     }
 
     @Override

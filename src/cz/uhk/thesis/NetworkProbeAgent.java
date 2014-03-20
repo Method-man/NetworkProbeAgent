@@ -6,8 +6,12 @@ import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.LogService;
 import cz.uhk.thesis.view.About;
 import cz.uhk.thesis.view.Status;
+import edu.uci.ics.jung.algorithms.layout.CircleLayout;
+import edu.uci.ics.jung.graph.DirectedSparseGraph;
+import edu.uci.ics.jung.visualization.VisualizationImageServer;
 import java.awt.AWTException;
 import java.awt.CheckboxMenuItem;
+import java.awt.Dimension;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
@@ -19,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import jwrapper.jwutils.JWWindowsOS;
 
 /**
  *
@@ -119,6 +124,25 @@ public class NetworkProbeAgent {
         content.getLabelIpLocal().setText(core.getNetworkManager().GetActiveDeviceIPasString());
         content.getLabelDevicesCount().setText(String.valueOf(core.GetDeviceManager().DevicesCount()));
         
+        /**
+         * GRAPH
+         */
+       DirectedSparseGraph g = new DirectedSparseGraph();
+    g.addVertex("Vertex1");
+    g.addVertex("Vertex2");
+    g.addVertex("Vertex3");
+    g.addEdge("Edge1", "Vertex1", "Vertex2");
+    g.addEdge("Edge2", "Vertex1", "Vertex3");
+    g.addEdge("Edge3", "Vertex3", "Vertex1");
+    VisualizationImageServer vs =
+      new VisualizationImageServer(
+        new CircleLayout(g), new Dimension(200, 200));
+    // VisualizationImageServer vs = new VisualizationImageServer(new CircleLayout(g), new Dimension(200, 200));
+        content.jPanelMap.add(vs);
+        /**
+         * GRAPH TEST
+         */
+        
         about.add(content);
         about.pack();
         about.setVisible(true);
@@ -129,7 +153,6 @@ public class NetworkProbeAgent {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-
         new NetworkProbeAgent();
         
     }

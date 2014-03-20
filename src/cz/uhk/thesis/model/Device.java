@@ -1,9 +1,7 @@
 
 package cz.uhk.thesis.model;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.jnetpcap.packet.format.FormatUtils;
 
@@ -111,6 +109,7 @@ public class Device {
     @Override
     public String toString()
     {
+        // only debug
         String s = "ip:"+getIp()+" mac:"+getMac()+"\r\n";
         s += "is gateway: "+(IsGateway()?"yes":"no")+"\r\n";
         for(Map.Entry<String, String> i: info.entrySet()) {
@@ -119,7 +118,7 @@ public class Device {
         if(IsGateway()) {
             int hop = 1;
             for(Map.Entry<byte[], Integer> route: route2internet.entrySet()) {
-                s += "hop "+hop+": "+FormatUtils.ip(route.getKey())+", packet loss: "+route.getValue()+"\r\n";
+                s += "hop "+hop+": "+FormatUtils.ip(route.getKey())+", packet received: "+route.getValue()+"\r\n";
                 hop++;
             }
         }
