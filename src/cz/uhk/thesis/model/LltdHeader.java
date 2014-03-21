@@ -47,7 +47,7 @@ public class LltdHeader extends JHeader {
     public static int headerLength(JBuffer buffer, int offset)  
     {  
         return  buffer.size() - offset;  
-    }
+    }   
     
     @FieldSetter
     public void destination(byte[] value) {
@@ -57,6 +57,29 @@ public class LltdHeader extends JHeader {
     @Field(offset = 0, length = 6, display = "destination", format = "#mac#")
     public byte[] destination() {
         return getByteArray(0, 6);
+    }
+    
+    @Dynamic(Field.Property.DESCRIPTION)  
+    public String serviceDescription() {  
+        String descr = null;
+        switch(service()) {
+            case HEADER_SERVICE_TOPOLOGY_DISCOVERY: 
+                descr = "topology discovery"; break;
+            case HEADER_SERVICE_QUICK_DISCOVERY: 
+                descr = "quick discovery"; break;
+        }
+        return descr;
+    }
+    
+    @Dynamic(Field.Property.DESCRIPTION)  
+    public String functionDescription() {  
+        String descr = null;
+        switch(function()) {
+            case HEADER_FUNCTION_DISCOVER: descr = "discover"; break;
+            case HEADER_FUNCTION_HELLO: descr = "hello"; break;
+            case HEADER_FUNCTION_RESET: descr = "reset"; break;
+        }
+        return descr;
     }
     
     @FieldSetter
@@ -105,16 +128,6 @@ public class LltdHeader extends JHeader {
         return getByte(15);
     }
     
-    @Dynamic(Field.Property.DESCRIPTION)  
-    public String serviceDescription() {  
-        String descr = null;
-        switch(service()) {
-            case HEADER_SERVICE_TOPOLOGY_DISCOVERY: descr = "topology discovery"; break;
-            case HEADER_SERVICE_QUICK_DISCOVERY: descr = "quick discovery"; break;
-        }
-        return descr;
-    }
-
     @FieldSetter
     public void reserved(byte value) {
         setByte(16, value);
@@ -163,17 +176,6 @@ public class LltdHeader extends JHeader {
     @Field(offset=96, length=16, format = "%x")  
     public int xid() {  
         return super.getUShort(30); // Offset 12, length 2 bytes  
-    }
-    
-    @Dynamic(Field.Property.DESCRIPTION)  
-    public String functionDescription() {  
-        String descr = null;
-        switch(function()) {
-            case HEADER_FUNCTION_DISCOVER: descr = "discover"; break;
-            case HEADER_FUNCTION_HELLO: descr = "hello"; break;
-            case HEADER_FUNCTION_RESET: descr = "reset"; break;
-        }
-        return descr;
     }
     
 }

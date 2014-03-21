@@ -6,10 +6,8 @@ package cz.uhk.thesis.modules;
 
 import cz.uhk.thesis.interfaces.Probe;
 import cz.uhk.thesis.core.Core;
-import cz.uhk.thesis.model.ScheduleJobCrate;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.protocol.JProtocol;
-import static org.quartz.CronScheduleBuilder.cronSchedule;
 
 /**
  *
