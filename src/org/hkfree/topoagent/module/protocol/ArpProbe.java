@@ -2,7 +2,7 @@
  * Modul pro sniffovani ARP packetu
  */
 
-package org.hkfree.topoagent.modules;
+package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.interfaces.Probe;
 import org.hkfree.topoagent.core.Core;

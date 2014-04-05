@@ -1,5 +1,5 @@
 
-package org.hkfree.topoagent.modules;
+package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.interfaces.ProbeService;
 import org.hkfree.topoagent.interfaces.Probe;
@@ -114,6 +114,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
         try {
             new URL("http://"+GetTracerouteHostTestHostname()).openStream().close();
         } catch (IOException ex) {
+            core.getExpertService().ShowRemoteHostUnavailable();
             LogService.Log2ConsoleError(this, ex);
         }
     }
@@ -221,6 +222,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                 if(tracerouteTtl > 1) return; // traceroute je OK
                 
                 LogService.Log2Console(this, "traceroute bez odpovedi, nahrazuji defaultni cestou");
+                core.getExpertService().ShowTracerouteNoRoute();
                 try {
                     for(String sIp: core.getAdapterService().getTracerouteDefault()) {
                         InetAddress ip = InetAddress.getByName(sIp);

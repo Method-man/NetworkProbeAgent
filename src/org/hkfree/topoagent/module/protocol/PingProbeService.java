@@ -1,5 +1,5 @@
 
-package org.hkfree.topoagent.modules;
+package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.core.LogService;
@@ -8,15 +8,10 @@ import org.hkfree.topoagent.interfaces.Probe;
 import org.hkfree.topoagent.interfaces.ProbeService;
 import org.hkfree.topoagent.interfaces.Stateful;
 import org.hkfree.topoagent.domain.Device;
-import org.hkfree.topoagent.domain.IcmpPacket;
 import org.hkfree.topoagent.domain.Parser;
 import org.hkfree.topoagent.domain.ScheduleJobCrate;
-import static org.hkfree.topoagent.modules.TracerouteProbeService.STATE_TRACEROUTE_DONE;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Map;
-import org.jnetpcap.Pcap;
-import org.jnetpcap.PcapIf;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.format.FormatUtils;
 import org.jnetpcap.protocol.network.Icmp;

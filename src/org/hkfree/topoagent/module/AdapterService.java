@@ -1,5 +1,5 @@
 
-package org.hkfree.topoagent.modules;
+package org.hkfree.topoagent.module;
 
 import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.core.DeviceManager;

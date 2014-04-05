@@ -8,6 +8,9 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="${pattern}"/>
         </Console>
+        <Console name="errorLogger" target="SYSTEM_OUT">
+            <PatternLayout pattern="${pattern}"/>
+        </Console>
         <RollingFile name="RollingFile" 
                      fileName="logs/${name}.log" 
                      filePattern="logs/${date:yyyy-MM}/${name}-%d{yyyy-MM-dd}-%i.log.gz">
@@ -21,6 +24,9 @@
         </RollingFile>
     </Appenders>
     <Loggers>
+        <Logger name="errorLogger" level="error">
+            <AppenderRef ref="errorLogger"/>
+        </Logger>
         <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="RollingFile"/>

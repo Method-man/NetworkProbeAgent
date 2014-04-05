@@ -4,30 +4,30 @@
  * and open the template in the editor.
  */
 
-package org.hkfree.topoagent.factories;
+package org.hkfree.topoagent.factory;
 
 import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.interfaces.Probe;
 import org.hkfree.topoagent.interfaces.ProbeFactory;
-import org.hkfree.topoagent.modules.LltdProbe;
-import org.hkfree.topoagent.modules.LltdProbeService;
+import org.hkfree.topoagent.module.protocol.TracerouteProbe;
+import org.hkfree.topoagent.module.protocol.TracerouteProbeService;
 
 /**
  *
  * @author Filip Valenta
  */
-public class LltdProbeFactory implements ProbeFactory {
-    
+public class TracerouteProbeFactory implements ProbeFactory {
+ 
     private final Core core;
     
-    public LltdProbeFactory(Core core) {
+    public TracerouteProbeFactory(Core core) {
         this.core = core;
     }
     
     @Override
     public Probe getProbe() {
-        LltdProbe ap = new LltdProbe(core);
-        ap.SetProbeService(new LltdProbeService(core, ap));
+        TracerouteProbe ap = new TracerouteProbe(core);
+        ap.SetProbeService(new TracerouteProbeService(core, ap));
         return ap;
     }
     

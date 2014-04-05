@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package org.hkfree.topoagent.modules;
+package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.interfaces.Probe;

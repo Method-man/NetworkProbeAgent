@@ -4,15 +4,15 @@
 
 package org.hkfree.topoagent.core;
 
-import org.hkfree.topoagent.factories.ArpProbeFactory;
-import org.hkfree.topoagent.factories.LltdProbeFactory;
-import org.hkfree.topoagent.factories.PingProbeFactory;
-import org.hkfree.topoagent.factories.TracerouteProbeFactory;
+import org.hkfree.topoagent.factory.ArpProbeFactory;
+import org.hkfree.topoagent.factory.LltdProbeFactory;
+import org.hkfree.topoagent.factory.PingProbeFactory;
+import org.hkfree.topoagent.factory.TracerouteProbeFactory;
 import org.hkfree.topoagent.interfaces.DeviceObserver;
 import org.hkfree.topoagent.interfaces.Probe;
 import org.hkfree.topoagent.interfaces.ProbeFactory;
 import org.hkfree.topoagent.domain.ScheduleJobCrate;
-import org.hkfree.topoagent.modules.AdapterService;
+import org.hkfree.topoagent.module.AdapterService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -108,11 +108,6 @@ public class ProbeLoader {
                 ((DeviceObserver)p.GetProbeService()).Notify();
             }
         }
-    }
-    
-    public AdapterService GetAdapterService()
-    {
-        return new AdapterService();
     }
     
     /**

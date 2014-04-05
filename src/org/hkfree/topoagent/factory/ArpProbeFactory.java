@@ -1,11 +1,11 @@
 
-package org.hkfree.topoagent.factories;
+package org.hkfree.topoagent.factory;
 
 import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.interfaces.Probe;
 import org.hkfree.topoagent.interfaces.ProbeFactory;
-import org.hkfree.topoagent.modules.ArpProbe;
-import org.hkfree.topoagent.modules.ArpProbeService;
+import org.hkfree.topoagent.module.protocol.ArpProbe;
+import org.hkfree.topoagent.module.protocol.ArpProbeService;
 
 /**
  *

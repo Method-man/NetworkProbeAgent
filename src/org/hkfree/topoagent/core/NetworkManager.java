@@ -143,7 +143,7 @@ public class NetworkManager {
         }
     }
     
-    public void IncrearePacketCounter()
+    public void IncreasePacketCounter()
     {
         packetCounter++;
     }
@@ -202,7 +202,7 @@ public class NetworkManager {
                 @Override
                 public void nextPacket(PcapPacket packet, String nothing) { 
                     System.out.println("packet");
-                    IncrearePacketCounter();
+                    IncreasePacketCounter();
                 }  
             };
             
@@ -238,6 +238,7 @@ public class NetworkManager {
     */
     public void FindActiveDevice()
     {
+        boolean deviceFound = false;
         try {
             for(final Map.Entry<Integer, PcapIf> interfc: GetNetworkInterfaces().entrySet()) {
                 InetAddress localIp = InetAddress.getByAddress(interfc.getValue().getAddresses().get(0).getAddr().getData());
@@ -245,9 +246,14 @@ public class NetworkManager {
                 if(IsRealDeviceFilter(interfc.getValue()) && localIp.isReachable(2000) && localIp instanceof Inet4Address) {
                     setActiveDevice(interfc.getValue());
                     LogService.Log2Console(this, "nalezeno aktivní rozhraní: "+GetDeviceIP(interfc.getValue()));
+                    deviceFound = true;
                     break;
                 }
                 
+            }
+            if(!deviceFound) {
+                core.getExpertService().ShowNoNetworkConnection();
+                throw new UnknownHostException("Systém není připojen k síti");
             }
         } catch (UnknownHostException ex) {
             LogService.Log2ConsoleError(this, ex);
@@ -281,18 +287,20 @@ public class NetworkManager {
     
     public void CatchPacketsTrigger()
     {
-        ExecutorService mainLoopExecutor = Executors.newSingleThreadExecutor();
-        mainLoopExecutor.submit(new Callable<Integer>() {
-            @Override
-            public Integer call() throws Exception {
-                LogService.Log2Console(this, "Core: spouštím smyčku odchytávání packetů");
-                return catchPackets(
-                    getActiveDevice(), 
-                    core, 
-                    NetworkManager.MODE_CATCH_PACKETS
-                );
-            }
-        });
+        if(getActiveDevice() != null) {
+            ExecutorService mainLoopExecutor = Executors.newSingleThreadExecutor();
+            mainLoopExecutor.submit(new Callable<Integer>() {
+                @Override
+                public Integer call() throws Exception {
+                    LogService.Log2Console(this, "Core: spouštím smyčku odchytávání packetů");
+                    return catchPackets(
+                        getActiveDevice(), 
+                        core, 
+                        NetworkManager.MODE_CATCH_PACKETS
+                    );
+                }
+            });
+        }
     }
     
     /**
