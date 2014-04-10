@@ -7,13 +7,12 @@ package org.hkfree.topoagent.domain;
  *
  * @author Filip Valenta
  */
-public class ArpPacket  {
+public class ArpPacket {
 
     /**
-     * 
+     *
      * http://stackoverflow.com/questions/12989413/jnetpcap-send-udp-packet
      * http://stackoverflow.com/questions/8141118/jnetpcap-preparing-udp-tcp-ip-icmp-packet
-     * 
+     *
      */
-
 }

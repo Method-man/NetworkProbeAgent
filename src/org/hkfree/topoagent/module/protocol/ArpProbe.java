@@ -1,7 +1,6 @@
 /*
  * Modul pro sniffovani ARP packetu
  */
-
 package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.interfaces.Probe;
@@ -20,28 +19,27 @@ public class ArpProbe extends Probe {
     }
 
     @Override
-    public String GetModuleName() {
+    public String getModuleName() {
         return "ARP packets";
     }
-    
+
     @Override
-    public boolean useThisModule(JPacket packet)
-    {   
+    public boolean useThisModule(JPacket packet) {
         return packet.hasHeader(JProtocol.ARP_ID);
     }
 
     @Override
-    public void InitBefore() {
-        
+    public void initBefore() {
+
     }
 
     @Override
-    public void InitAfter() {
-        
+    public void initAfter() {
+
     }
 
     @Override
-    public String GetTcpdumpFilter() {
+    public String getTcpdumpFilter() {
         return "arp";
     }
 

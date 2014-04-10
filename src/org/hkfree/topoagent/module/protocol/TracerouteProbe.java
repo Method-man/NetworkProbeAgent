@@ -1,4 +1,3 @@
-
 package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.interfaces.Probe;
@@ -15,13 +14,13 @@ import org.jnetpcap.protocol.network.Ip4;
  * @author Filip Valenta
  */
 public class TracerouteProbe extends Probe {
-    
+
     public TracerouteProbe(Core core) {
         super(core);
     }
 
     @Override
-    public String GetModuleName() {
+    public String getModuleName() {
         return "Traceroute";
     }
 
@@ -30,69 +29,69 @@ public class TracerouteProbe extends Probe {
         boolean use = false;
         use |= useThisModuleObtainGatewayMac(packet);
         use |= useThisModuleTraceroute(packet);
-        
+
         // do not track icmp packets any more, those packets are probably for another (ping) module
-        use &= !((TracerouteProbeService)probeService).IsInState(TracerouteProbeService.STATE_TRACEROUTE_DONE);
+        use &= !((TracerouteProbeService) probeService).isInState(TracerouteProbeService.STATE_TRACEROUTE_DONE);
         return use;
     }
-    
+
     /**
      * Is this packet form gateway (in obtain test)
-     * 
+     *
      * @param packet
-     * @return 
+     * @return
      */
-    public boolean useThisModuleObtainGatewayMac(JPacket packet)
-    {
+    public boolean useThisModuleObtainGatewayMac(JPacket packet) {
         boolean use = false;
-        if(packet.hasHeader(new Ip4())) { // 4 obtain gateway mac
+        if (packet.hasHeader(new Ip4())) { // 4 obtain gateway mac
             // source IP == origin host IP
             use |= Arrays.equals(
-                       ((Ip4)packet.getHeader(new Ip4())).source(),
-                       ((TracerouteProbeService)probeService).GetTracerouteHostTestIp()
-                   );
+                    ((Ip4) packet.getHeader(new Ip4())).source(),
+                    ((TracerouteProbeService) probeService).getTracerouteHostTestIp()
+            );
             // ethernet source MAC != interface MAC
             use &= !Arrays.equals(
-                        ((Ethernet)packet.getHeader(new Ethernet())).source(), 
-                        core.getNetworkManager().GetActiveDeviceMACasByte()
-                    );
+                    ((Ethernet) packet.getHeader(new Ethernet())).source(),
+                    core.getNetworkManager().getActiveDeviceMACasByte()
+            );
             // service in initial state
-            use &= ((TracerouteProbeService)probeService).IsInState(TracerouteProbeService.STATE_INITIAL);
+            use &= ((TracerouteProbeService) probeService).isInState(TracerouteProbeService.STATE_INITIAL);
         }
         return use;
     }
-    
-    public boolean useThisModuleTraceroute(JPacket packet)
-    {
+
+    public boolean useThisModuleTraceroute(JPacket packet) {
         boolean use = false;
-        if(packet.hasHeader(new Icmp())) {
+        if (packet.hasHeader(new Icmp())) {
             Icmp icmp = packet.getHeader(new Icmp());
-            switch(icmp.type()) {
-                case IcmpType.TIME_EXCEEDED_ID: 
-                case IcmpType.DESTINATION_UNREACHABLE_ID: 
-                case IcmpType.ECHO_REPLY_ID: 
-                {
+            switch (icmp.type()) {
+                case IcmpType.TIME_EXCEEDED_ID:
+                case IcmpType.DESTINATION_UNREACHABLE_ID:
+                case IcmpType.ECHO_REPLY_ID: {
                     use = true;
-                } break;
-                default: use = false; break;
+                }
+                break;
+                default:
+                    use = false;
+                    break;
             }
         }
         return use;
     }
 
     @Override
-    public void InitBefore() {
-        
-    }
-
-    @Override
-    public void InitAfter() {
+    public void initBefore() {
 
     }
 
     @Override
-    public String GetTcpdumpFilter() {
-        return "icmp or host "+((TracerouteProbeService)probeService).GetTracerouteHostTestHostname();
+    public void initAfter() {
+
     }
-    
+
+    @Override
+    public String getTcpdumpFilter() {
+        return "icmp or host " + ((TracerouteProbeService) probeService).getTracerouteHostTestHostname();
+    }
+
 }

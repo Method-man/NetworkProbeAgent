@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.core.Core;
@@ -22,7 +21,7 @@ public class PingProbe extends Probe {
     }
 
     @Override
-    public String GetModuleName() {
+    public String getModuleName() {
         return "Ping";
     }
 
@@ -32,18 +31,18 @@ public class PingProbe extends Probe {
     }
 
     @Override
-    public void InitBefore() {
-        
+    public void initBefore() {
+
     }
 
     @Override
-    public void InitAfter() {
-        
+    public void initAfter() {
+
     }
 
     @Override
-    public String GetTcpdumpFilter() {
+    public String getTcpdumpFilter() {
         return "icmp";
     }
-    
+
 }

@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.core.Core;
@@ -24,34 +23,34 @@ import org.quartz.JobExecutionException;
 public class LltdProbeSchedule implements Job {
 
     @Override
-    public void execute(final JobExecutionContext jec) throws JobExecutionException
-    {
-        Core core = (Core)jec.getJobDetail().getJobDataMap().get("core");
-        Probe probe = (Probe)jec.getJobDetail().getJobDataMap().get("probe");
+    public void execute(final JobExecutionContext jec) throws JobExecutionException {
+        Core core = (Core) jec.getJobDetail().getJobDataMap().get("core");
+        Probe probe = (Probe) jec.getJobDetail().getJobDataMap().get("probe");
 
         PcapIf activeDevice = core.getNetworkManager().getActiveDevice();
-        
-        if(activeDevice != null) {
+
+        if (activeDevice != null) {
 
             LltdQdResetPacket packet_r = new LltdQdResetPacket(core);
             int state_r = Pcap.OK;
-            state_r += core.getNetworkManager().SendPacket(activeDevice, packet_r);
-            state_r += core.getNetworkManager().SendPacket(activeDevice, packet_r);
-            state_r += core.getNetworkManager().SendPacket(activeDevice, packet_r);
-            if(state_r == Pcap.OK) {
-                LogService.Log2Console(probe.GetModuleName(), "LLTD Reset QD Packet (3) odeslán");
+            state_r += core.getNetworkManager().sendPacket(activeDevice, packet_r);
+            state_r += core.getNetworkManager().sendPacket(activeDevice, packet_r);
+            state_r += core.getNetworkManager().sendPacket(activeDevice, packet_r);
+            if (state_r == Pcap.OK) {
+                LogService.log2Console(probe.getModuleName(), "LLTD Reset QD Packet (3) odeslán");
             }
 
             LltdQdDiscoveryPacket packet_qd = new LltdQdDiscoveryPacket(core);
             int state_qd = Pcap.OK;
-            state_qd += core.getNetworkManager().SendPacket(activeDevice, packet_qd);
-            if(state_qd == Pcap.OK) {
-                LogService.Log2Console(probe.GetModuleName(), "LLTD Discovery Packet (1) odeslán");
+            state_qd += core.getNetworkManager().sendPacket(activeDevice, packet_qd);
+            if (state_qd == Pcap.OK) {
+                LogService.log2Console(probe.getModuleName(), "LLTD Discovery Packet (1) odeslán");
             }
-        
-        } else {
-            core.getExpertService().ShowNoNetworkConnection();
+
+        }
+        else {
+            core.getExpertService().showNoNetworkConnection();
         }
     }
-    
+
 }

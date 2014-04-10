@@ -1,4 +1,3 @@
-
 package org.hkfree.topoagent.domain;
 
 import org.jnetpcap.packet.JMemoryPacket;
@@ -14,35 +13,34 @@ public abstract class Packet extends JMemoryPacket {
     private final Ethernet headerEthernet;
     // private final Ip4 headerIp4;
     // private final Tcp headerTcp;
-    
+
     public Packet(int protocolID, byte[] packetdata) {
-    
+
         super(protocolID, packetdata);
         setUShort(12, 0x0800);
         scan(JProtocol.ETHERNET_ID);
         headerEthernet = getHeader(new Ethernet());
-        
+
         recalculateAllChecksums();
-        
+
     }
-    
+
     public Packet(int protocolID, String hexdump) {
-        
+
         super(protocolID, hexdump);
-        
+
         setUShort(12, 0x0800);
         scan(JProtocol.ETHERNET_ID);
         headerEthernet = getHeader(new Ethernet());
-        
+
         scan(JProtocol.ETHERNET_ID);
-        
+
         recalculateAllChecksums();
-        
+
     }
-    
-    public Ethernet GetEthernet()
-    {
+
+    public Ethernet getEthernet() {
         return headerEthernet;
     }
-    
+
 }

@@ -1,7 +1,6 @@
 /*
  * Modul pro sniffovani LLTD packetu
  */
-
 package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.core.Core;
@@ -19,45 +18,45 @@ import static org.quartz.CronScheduleBuilder.cronSchedule;
  * @author Filip Valenta
  */
 public class LltdProbe extends Probe {
-    
+
     public LltdProbe(Core core) {
         super(core);
     }
 
     @Override
-    public String GetModuleName() {
+    public String getModuleName() {
         return "LLTD packets";
     }
-    
+
     @Override
     public boolean useThisModule(JPacket packet) {
         return packet.hasHeader(new LltdHeader());
     }
-    
+
     @Override
-    public void InitBefore() {
+    public void initBefore() {
         try {
             LltdHeader.LLTD_ID = JRegistry.register(LltdHeader.class);
         } catch (RegistryHeaderErrors ex) {
-            LogService.Log2ConsoleError(this, ex);
+            LogService.log2ConsoleError(this, ex);
         }
-    }
-    
-    @Override
-    public void InitAfter() {
-        
     }
 
     @Override
-    public String GetTcpdumpFilter() {
-        return "ether proto 0x"+Integer.toHexString(LltdHeader.ETHERNET_HEADER_LLTD);
+    public void initAfter() {
+
     }
-    
+
     @Override
-    public ScheduleJobCrate Schedule() {
-        return new ScheduleJobCrate(LltdProbeSchedule.class, "job-lltd", "group-lltd", "trigger-lltd", "group-lltd", 
-            cronSchedule("0 0/1 * * * ?") // kazdou minutu
+    public String getTcpdumpFilter() {
+        return "ether proto 0x" + Integer.toHexString(LltdHeader.ETHERNET_HEADER_LLTD);
+    }
+
+    @Override
+    public ScheduleJobCrate schedule() {
+        return new ScheduleJobCrate(LltdProbeSchedule.class, "job-lltd", "group-lltd", "trigger-lltd", "group-lltd",
+                cronSchedule("0 0/1 * * * ?") // kazdou minutu
         );
     }
-    
+
 }

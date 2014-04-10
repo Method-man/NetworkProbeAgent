@@ -1,4 +1,3 @@
-
 package org.hkfree.topoagent.domain;
 
 /**
@@ -6,5 +5,5 @@ package org.hkfree.topoagent.domain;
  * @author Filip Valenta
  */
 public interface Parser {
-    
+
 }

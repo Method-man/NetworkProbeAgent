@@ -1,8 +1,6 @@
-
 /**
  * This class works with found devices from all modules
  */
-
 package org.hkfree.topoagent.core;
 
 import org.hkfree.topoagent.domain.Device;
@@ -17,45 +15,41 @@ import org.jnetpcap.packet.format.FormatUtils;
  * @author Filip Valenta
  */
 public class DeviceManager {
-    
+
     // TODO: rozpoznat, ze 2 zarizeni se stejnou IP maji rozdilny MAC
     // TODO: rozpoznat 2 cesty do stejneho bodu
-    
     HashMap<String, Device> devices = new HashMap<>();
-    
-    public Device getDevice(byte[] bMac)
-    {
+
+    public Device getDevice(byte[] bMac) {
         String sMac = FormatUtils.mac(bMac);
         Device d = devices.get(sMac);
-        if(d == null) {
+        if (d == null) {
             d = new Device(sMac, bMac);
             devices.put(sMac, d);
-            LogInfo();
+            logInfo();
         }
-        
+
         return d;
-        
+
     }
-    
+
     /**
      * Returns number of found devices
-     * 
+     *
      * @return int
      */
-    public int DevicesCount()
-    {
+    public int devicesCount() {
         return devices.size();
     }
-    
+
     /**
      * Get gateway device
-     * 
-     * @return 
+     *
+     * @return
      */
-    public Device GetGateway()
-    {
-        for(Map.Entry<String, Device> d: devices.entrySet()) {
-            if(d.getValue().IsGateway()) {
+    public Device getGateway() {
+        for (Map.Entry<String, Device> d : devices.entrySet()) {
+            if (d.getValue().isGateway()) {
                 return d.getValue();
             }
         }
@@ -65,20 +59,18 @@ public class DeviceManager {
     /**
      * Trigger the LogService of devices if device list is not empty
      */
-    public void LogInfo() {
-        
+    public void logInfo() {
+
         // TODO: presunout do Loggeru !
-        
-        LogService.Log2Console(this, "ukladam nove info");
-        if(DevicesCount() > 0) {
+        LogService.log2Console(this, "ukladam nove info");
+        if (devicesCount() > 0) {
             List<Device> d = new ArrayList<>(devices.values());
-            LogService.LogDeviceList(d);
+            LogService.logDeviceList(d);
         }
     }
-    
-    public HashMap<String, Device> GetAllDevices()
-    {
+
+    public HashMap<String, Device> getAllDevices() {
         return devices;
     }
-    
+
 }

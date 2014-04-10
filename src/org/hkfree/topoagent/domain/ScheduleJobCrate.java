@@ -1,38 +1,35 @@
-
 package org.hkfree.topoagent.domain;
 
 import org.quartz.CronScheduleBuilder;
 import org.quartz.Job;
 
 /**
- * Crate for store module schedule event settings
- * source: http://www.quartz-scheduler.org/
- * 
+ * Crate for store module schedule event settings source: http://www.quartz-scheduler.org/
+ *
  * @author Filip Valenta
  */
 public class ScheduleJobCrate {
- 
+
     private Class<? extends Job> jobClass = null;
     private String jobIdentity = null;
     private String jobGroup = null;
-    
+
     private String triggerIndentity = null;
     private String triggerGroup = null;
     private CronScheduleBuilder cronScheduleBuilder = null;
-    
+
     public ScheduleJobCrate(
-            Class<? extends Job> jobClass, 
-            String jobIdentity, 
+            Class<? extends Job> jobClass,
+            String jobIdentity,
             String jobGroup,
             String triggerIdentity,
             String triggerGroup,
-            CronScheduleBuilder cronScheduleBuilder)
-    {
+            CronScheduleBuilder cronScheduleBuilder) {
         // job info
         this.jobClass = jobClass;
         this.jobIdentity = jobIdentity;
         this.jobGroup = jobGroup;
-        
+
         // trigger info
         this.triggerIndentity = triggerIdentity;
         this.triggerGroup = triggerGroup;
@@ -62,5 +59,5 @@ public class ScheduleJobCrate {
     public CronScheduleBuilder getCronScheduleBuilder() {
         return cronScheduleBuilder;
     }
-    
+
 }

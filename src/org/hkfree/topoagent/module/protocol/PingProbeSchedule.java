@@ -1,4 +1,3 @@
-
 package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.core.Core;
@@ -20,50 +19,48 @@ import org.quartz.JobExecutionException;
  * @author Filip Valenta
  */
 public class PingProbeSchedule implements Job {
-    
+
     @Override
-    public void execute(final JobExecutionContext jec) throws JobExecutionException
-    {
-        LogService.Log2Console(this, "spoustim naplanovany ping");
-        Core core = (Core)jec.getJobDetail().getJobDataMap().get("core");
-        Probe probe = (Probe)jec.getJobDetail().getJobDataMap().get("probe");
-        
-        HashMap<byte[], Integer> route2internet = core.GetDeviceManager().GetGateway().GetRoute2Internet();
-        for(Map.Entry<byte[], Integer> ip: route2internet.entrySet()) {
+    public void execute(final JobExecutionContext jec) throws JobExecutionException {
+        LogService.log2Console(this, "spoustim naplanovany ping");
+        Core core = (Core) jec.getJobDetail().getJobDataMap().get("core");
+        Probe probe = (Probe) jec.getJobDetail().getJobDataMap().get("probe");
+
+        HashMap<byte[], Integer> route2internet = core.getDeviceManager().getGateway().getRoute2Internet();
+        for (Map.Entry<byte[], Integer> ip : route2internet.entrySet()) {
             ip.setValue(0); // reset counter
             try {
-                LogService.Log2Console(this, "test adresy "+FormatUtils.ip(ip.getKey()));
-                for(int i=1; i<=PingProbeService.PING_HOP_TEST_COUNT; i++) {
-                    sendIcmpRequest(core, probe, ip.getKey(), core.GetDeviceManager().GetGateway().getMacAsByte());
+                LogService.log2Console(this, "test adresy " + FormatUtils.ip(ip.getKey()));
+                for (int i = 1; i <= PingProbeService.PING_HOP_TEST_COUNT; i++) {
+                    sendIcmpRequest(core, probe, ip.getKey(), core.getDeviceManager().getGateway().getMacAsByte());
                     Thread.sleep(1000);
                 }
             } catch (InterruptedException ex) {
-                LogService.Log2ConsoleError(this, ex);
+                LogService.log2ConsoleError(this, ex);
             }
         }
-        
+
     }
-    
-    private void sendIcmpRequest(Core core, Probe probe, byte[] ipdestination, byte[] gatewaymac)
-    {
+
+    private void sendIcmpRequest(Core core, Probe probe, byte[] ipdestination, byte[] gatewaymac) {
         try {
             PcapIf activeDevice = core.getNetworkManager().getActiveDevice();
-            
+
             IcmpPacket icmp = new IcmpPacket(core);
             icmp.ethernetDestination(gatewaymac);
-            icmp.ipSource(core.getNetworkManager().GetActiveDeviceIPasByte());
+            icmp.ipSource(core.getNetworkManager().getActiveDeviceIPasByte());
             icmp.ipDestination(ipdestination);
-            icmp.TimeToLive(15);
+            icmp.timeToLive(15);
             icmp.recalculateAllChecksums();
-            
+
             int state_icmp = Pcap.OK;
-            state_icmp += core.getNetworkManager().SendPacket(activeDevice, icmp);
-            if(state_icmp == Pcap.OK) {
-                LogService.Log2Console(probe.GetModuleName(), "Ping Packet (hop "+icmp.TimeToLive()+") odeslán");
+            state_icmp += core.getNetworkManager().sendPacket(activeDevice, icmp);
+            if (state_icmp == Pcap.OK) {
+                LogService.log2Console(probe.getModuleName(), "Ping Packet (hop " + icmp.timeToLive() + ") odeslán");
             }
         } catch (UnknownHostException ex) {
-            LogService.Log2ConsoleError(this, ex);
+            LogService.log2ConsoleError(this, ex);
         }
     }
-    
+
 }

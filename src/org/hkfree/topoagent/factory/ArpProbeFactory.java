@@ -1,4 +1,3 @@
-
 package org.hkfree.topoagent.factory;
 
 import org.hkfree.topoagent.core.Core;
@@ -14,16 +13,16 @@ import org.hkfree.topoagent.module.protocol.ArpProbeService;
 public class ArpProbeFactory implements ProbeFactory {
 
     private final Core core;
-    
+
     public ArpProbeFactory(Core core) {
         this.core = core;
     }
-    
+
     @Override
     public Probe getProbe() {
         ArpProbe ap = new ArpProbe(core);
-        ap.SetProbeService(new ArpProbeService(core, ap));
+        ap.setProbeService(new ArpProbeService(core, ap));
         return ap;
     }
-    
+
 }

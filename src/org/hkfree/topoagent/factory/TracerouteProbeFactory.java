@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package org.hkfree.topoagent.factory;
 
 import org.hkfree.topoagent.core.Core;
@@ -17,18 +16,18 @@ import org.hkfree.topoagent.module.protocol.TracerouteProbeService;
  * @author Filip Valenta
  */
 public class TracerouteProbeFactory implements ProbeFactory {
- 
+
     private final Core core;
-    
+
     public TracerouteProbeFactory(Core core) {
         this.core = core;
     }
-    
+
     @Override
     public Probe getProbe() {
         TracerouteProbe ap = new TracerouteProbe(core);
-        ap.SetProbeService(new TracerouteProbeService(core, ap));
+        ap.setProbeService(new TracerouteProbeService(core, ap));
         return ap;
     }
-    
+
 }
