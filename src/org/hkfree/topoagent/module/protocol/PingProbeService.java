@@ -7,7 +7,7 @@ import org.hkfree.topoagent.interfaces.Probe;
 import org.hkfree.topoagent.interfaces.ProbeService;
 import org.hkfree.topoagent.interfaces.Stateful;
 import org.hkfree.topoagent.domain.Device;
-import org.hkfree.topoagent.domain.Parser;
+import org.hkfree.topoagent.interfaces.Parser;
 import org.hkfree.topoagent.domain.ScheduleJobCrate;
 import java.util.Arrays;
 import java.util.Map;

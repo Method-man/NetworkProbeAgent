@@ -1,6 +1,5 @@
 package org.hkfree.topoagent.interfaces;
 
-import org.hkfree.topoagent.domain.Parser;
 import org.jnetpcap.packet.JPacket;
 
 /**

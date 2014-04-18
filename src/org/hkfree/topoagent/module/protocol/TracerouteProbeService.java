@@ -6,7 +6,7 @@ import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.core.LogService;
 import org.hkfree.topoagent.interfaces.DeviceObserver;
 import org.hkfree.topoagent.domain.Device;
-import org.hkfree.topoagent.domain.Parser;
+import org.hkfree.topoagent.interfaces.Parser;
 import org.hkfree.topoagent.interfaces.Stateful;
 import static org.hkfree.topoagent.interfaces.Stateful.STATE_INITIAL;
 import org.hkfree.topoagent.domain.IcmpPacket;

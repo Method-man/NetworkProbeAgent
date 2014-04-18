@@ -13,12 +13,12 @@ import org.hkfree.topoagent.core.NetworkManager;
  */
 public abstract class LltdPacket extends Packet {
 
-    public static final int PACKET_SITE = 60;
+    // public static final int PACKET_SITE = 60;
 
     LltdHeader lltdHeader;
 
-    public LltdPacket(Core c, byte version, byte service, byte reserved, byte function) {
-        super(LltdHeader.LLTD_ID, new byte[PACKET_SITE]);
+    public LltdPacket(Core c, byte version, byte service, byte reserved, byte function, int size) {
+        super(LltdHeader.LLTD_ID, new byte[size]);
         scan(LltdHeader.LLTD_ID);
 
         lltdHeader = new LltdHeader();
@@ -45,7 +45,7 @@ public abstract class LltdPacket extends Packet {
         lltdHeader.destinationReal(NetworkManager.BROADCAST_MAC_ADDRESS);
 
         lltdHeader.xid((short) 0x0000);
-
+        
     }
 
     public void setXid(short xid) {

@@ -15,9 +15,10 @@ public class LltdQdResetPacket extends LltdPacket {
         super(
                 c,
                 LltdHeader.HEADER_VERSION_1,
-                LltdHeader.HEADER_SERVICE_TOPOLOGY_DISCOVERY, // kolega ma TD nikoli QD
+                LltdHeader.HEADER_SERVICE_QUICK_DISCOVERY , // kolega ma TD nikoli QD
                 LltdHeader.HEADER_RESERVED,
-                LltdHeader.HEADER_FUNCTION_RESET
+                LltdHeader.HEADER_FUNCTION_RESET,
+                60
         );
     }
 

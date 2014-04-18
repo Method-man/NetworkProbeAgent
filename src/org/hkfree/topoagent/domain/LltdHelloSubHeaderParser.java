@@ -1,5 +1,6 @@
 package org.hkfree.topoagent.domain;
 
+import org.hkfree.topoagent.interfaces.Parser;
 import org.hkfree.topoagent.core.LogService;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;

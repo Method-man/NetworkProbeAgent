@@ -1,4 +1,4 @@
-package org.hkfree.topoagent.domain;
+package org.hkfree.topoagent.interfaces;
 
 /**
  *

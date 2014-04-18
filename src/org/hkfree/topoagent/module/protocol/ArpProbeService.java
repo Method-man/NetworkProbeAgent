@@ -4,7 +4,7 @@ import org.hkfree.topoagent.interfaces.ProbeService;
 import org.hkfree.topoagent.interfaces.Probe;
 import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.core.LogService;
-import org.hkfree.topoagent.domain.Parser;
+import org.hkfree.topoagent.interfaces.Parser;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.format.FormatUtils;
 import org.jnetpcap.protocol.network.Arp;

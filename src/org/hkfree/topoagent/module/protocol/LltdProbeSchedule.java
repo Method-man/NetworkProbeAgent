@@ -7,9 +7,9 @@ package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.core.LogService;
-import org.hkfree.topoagent.interfaces.Probe;
 import org.hkfree.topoagent.domain.LltdQdDiscoveryPacket;
 import org.hkfree.topoagent.domain.LltdQdResetPacket;
+import org.hkfree.topoagent.interfaces.Probe;
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapIf;
 import org.quartz.Job;
@@ -41,11 +41,21 @@ public class LltdProbeSchedule implements Job {
             }
 
             LltdQdDiscoveryPacket packet_qd = new LltdQdDiscoveryPacket(core);
+            // LltdTopologyDiscovery packet_qd = new LltdTopologyDiscovery(core);
             int state_qd = Pcap.OK;
             state_qd += core.getNetworkManager().sendPacket(activeDevice, packet_qd);
             if (state_qd == Pcap.OK) {
-                LogService.log2Console(probe.getModuleName(), "LLTD Discovery Packet (1) odeslán");
+                LogService.log2Console(probe.getModuleName(), "LLTD Quick Discovery Packet (1) odeslán");
             }
+            
+            /*LltdQdResetPacket packet_r2 = new LltdQdResetPacket(core);
+            int state_r2 = Pcap.OK;
+            state_r2 += core.getNetworkManager().sendPacket(activeDevice, packet_r2);
+            state_r2 += core.getNetworkManager().sendPacket(activeDevice, packet_r2);
+            state_r2 += core.getNetworkManager().sendPacket(activeDevice, packet_r2);
+            if (state_r2 == Pcap.OK) {
+                LogService.log2Console(probe.getModuleName(), "LLTD Reset QD Packet (1) odeslán");
+            }*/
 
         }
         else {

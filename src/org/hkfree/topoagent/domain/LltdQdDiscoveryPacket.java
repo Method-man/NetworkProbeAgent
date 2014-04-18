@@ -19,10 +19,11 @@ public class LltdQdDiscoveryPacket extends LltdPacket {
                 LltdHeader.HEADER_VERSION_1,
                 LltdHeader.HEADER_SERVICE_QUICK_DISCOVERY,
                 LltdHeader.HEADER_RESERVED,
-                LltdHeader.HEADER_FUNCTION_DISCOVER
+                LltdHeader.HEADER_FUNCTION_DISCOVER,
+                60
         );
-
-        // TODO: setXid((short)0x6989);
+        
+        setXid((short)0xFFFF);
     }
 
 }

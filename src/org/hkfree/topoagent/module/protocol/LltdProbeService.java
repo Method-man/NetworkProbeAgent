@@ -1,12 +1,13 @@
 package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.core.Core;
+import org.hkfree.topoagent.core.LogService;
 import org.hkfree.topoagent.interfaces.Probe;
 import org.hkfree.topoagent.interfaces.ProbeService;
 import org.hkfree.topoagent.domain.Device;
 import org.hkfree.topoagent.domain.LltdHeader;
 import org.hkfree.topoagent.domain.LltdHelloSubHeaderParser;
-import org.hkfree.topoagent.domain.Parser;
+import org.hkfree.topoagent.interfaces.Parser;
 import org.jnetpcap.packet.JPacket;
 
 /**
@@ -37,7 +38,14 @@ public class LltdProbeService implements ProbeService {
                 );
                 LltdHelloSubHeaderParser helloParser = new LltdHelloSubHeaderParser(subheader);
                 packetCompare(helloParser.getIpv4(), lltdHeader.source(), helloParser);
+                
+                
+                
+                LogService.log2Console(this, helloParser.getIpv4());
+                LogService.log2Console(this, String.valueOf(lltdHeader.source()));
+            
             }
+            
         }
     }
 
@@ -49,7 +57,12 @@ public class LltdProbeService implements ProbeService {
     // TODO: udelat privatni !!!
     @Override
     public void packetCompare(String ip, byte[] mac, Parser parser) {
-        if (core.getNetworkManager().isValidIp(ip) && core.getNetworkManager().isValidMac(mac)) {
+        
+        LogService.log2Console(this, ip);
+        LogService.log2Console(this, String.valueOf(mac));
+        
+        // core.getNetworkManager().isValidIp(ip) && 
+        if (core.getNetworkManager().isValidMac(mac)) {
             /**
              * TODO: skutecne nastavit ? zkontrolovat jaky zaznam existuje a musi se shodovat
              */
