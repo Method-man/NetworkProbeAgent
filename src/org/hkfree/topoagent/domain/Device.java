@@ -17,6 +17,8 @@ public class Device {
     public static final String DEVICE_LINK_SPEED = "linkspeed";
     public static final String DEVICE_MACHINE_NAME = "machinename";
     public static final String DEVICE_BSSID = "bssid";
+    public static final String DEVICE_CHARACTERISTICS = "characteristics";
+    public static final String DEVICE_802_11_PHYSICAL_MEDIUM = "80211physicalmedium";
 
     public static final int PACKET_LOSS_UNDEFINED = -1;
 
@@ -34,7 +36,11 @@ public class Device {
      * @return
      */
     public String getInfo(String pos) {
-        return info.get(pos);
+        String i = info.get(pos);
+        if (i != null && (pos == DEVICE_HOST_ID || pos == DEVICE_BSSID)) {
+            i = i.toUpperCase();
+        }
+        return i;
     }
 
     /**
@@ -115,6 +121,56 @@ public class Device {
         }
         s += "---------------------------------\r\n";
         return s;
+    }
+
+    /**
+     * Find lowest MAC of this Device
+     *
+     * @param allowBSSID check BSSID, often false
+     * @return
+     */
+    public String getMacLowest(boolean allowBSSID) {
+
+        String lowestMac = getMac().toUpperCase();
+        String lowestMacLast = lowestMac.substring(15, 17);
+        String lowestMacFirst = lowestMac.substring(0, 14);
+
+        /**
+         * if
+         *
+         * allowed comparison of BSSID DEVICE_BSSID is not empty. 
+         * first parts of host id MAC and actual shortest mac are SAME !
+         */
+        String deviceBSSID = getInfo(DEVICE_BSSID);
+        if (allowBSSID && deviceBSSID != null) {
+            deviceBSSID = deviceBSSID.toUpperCase();
+            if (deviceBSSID.substring(0, 14).equals(lowestMacFirst)) {
+                int compare = deviceBSSID.substring(15, 17).compareTo(lowestMacLast);
+                if (compare < 0) {
+                    lowestMac = deviceBSSID;
+                    lowestMacLast = lowestMac.substring(15, 17);
+                }
+            }
+        }
+
+        /* 
+         * if 
+         *
+         * HOST_ID is not empty
+         * first parts of host id MAC and actual shortest mac are SAME !
+         */
+        String deviceHostId = getInfo(DEVICE_HOST_ID);
+        if (deviceHostId != null) {
+            deviceHostId = deviceHostId.toUpperCase();
+            if (deviceHostId.substring(0, 14).equals(lowestMacFirst)) {
+                int compare = getInfo(DEVICE_HOST_ID).substring(15, 17).compareTo(lowestMacLast);
+                if (compare < 0) {
+                    lowestMac = deviceHostId;
+                }
+            }
+        }
+
+        return lowestMac;
     }
 
 }

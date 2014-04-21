@@ -41,19 +41,19 @@ public class ProbeLoader {
             scheduler = StdSchedulerFactory.getDefaultScheduler();
             scheduler.start();
         } catch (JobExecutionException ex) {
-            LogService.log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         } catch (SchedulerException ex) {
-            LogService.log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         }
 
         this.core = core;
         ProbeFactory pf = new ArpProbeFactory(core);
         probes.add(pf.getProbe());
-        pf = new LltdProbeFactory(core);
-        probes.add(pf.getProbe());
         pf = new TracerouteProbeFactory(core);
         probes.add(pf.getProbe());
         pf = new PingProbeFactory(core);
+        probes.add(pf.getProbe());
+        pf = new LltdProbeFactory(core);
         probes.add(pf.getProbe());
     }
 
@@ -65,28 +65,28 @@ public class ProbeLoader {
         try {
             for (Probe p : probes) {
                 p.initBefore();
-                LogService.log2Console(this, "inicializuji modul: " + p.getModuleName());
+                LogService.Log2Console(this, "inicializuji modul: " + p.getModuleName());
                 core.getNetworkManager().add2Filter(p.getTcpdumpFilter());
-                LogService.log2Console(p, "pridavam filtr");
+                LogService.Log2Console(p, "pridavam filtr");
                 ScheduleJobCrate sjc = p.schedule();
                 if (sjc != null) {
                     schedulePrepare(sjc, p);
-                    LogService.log2Console(p, "uloha naplanovana");
+                    LogService.Log2Console(p, "uloha naplanovana");
                 }
             }
 
             // scheduler.shutdown();
         } catch (JobExecutionException ex) {
-            LogService.log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         } catch (SchedulerException ex) {
-            LogService.log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         }
     }
 
     public void initAfterProbes() {
         for (Probe p : probes) {
             p.initAfter();
-            LogService.log2Console(p.getModuleName(), "spouštím init after");
+            LogService.Log2Console(p.getModuleName(), "spouštím init after");
             p.getProbeService().probeSend();
         }
     }
@@ -95,7 +95,7 @@ public class ProbeLoader {
      * notifyChange all modules and save info to log
      */
     public void notifyAllModules() {
-        core.getDeviceManager().logInfo();
+        LogService.logInfo(this, core.getDeviceManager().getAllDevices());
         for (Probe p : probes) {
             if (p.getProbeService() instanceof DeviceObserver) {
                 ((DeviceObserver) p.getProbeService()).notifyChange();
@@ -114,7 +114,22 @@ public class ProbeLoader {
         Map data = new HashMap();
         data.put("core", core);
         data.put("probe", probe);
-
+        schedule(sjc, data);
+    }
+    
+    /**
+     * Add scheduled event to scheduler
+     *
+     * @param sjc
+     * @throws org.quartz.SchedulerException
+     */
+    public void schedulePrepare(ScheduleJobCrate sjc) throws SchedulerException {
+        Map data = new HashMap();
+        data.put("core", core);
+        schedule(sjc, data);
+    }
+    
+    private void schedule(ScheduleJobCrate sjc, Map data) throws SchedulerException {
         JobDetail job = newJob(sjc.getJobClass())
                 .usingJobData(new JobDataMap(data))
                 .withIdentity(sjc.getJobIdentity(), sjc.getJobGroup())

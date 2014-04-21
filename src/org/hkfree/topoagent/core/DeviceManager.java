@@ -4,9 +4,7 @@
 package org.hkfree.topoagent.core;
 
 import org.hkfree.topoagent.domain.Device;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.jnetpcap.packet.format.FormatUtils;
 
@@ -16,9 +14,7 @@ import org.jnetpcap.packet.format.FormatUtils;
  */
 public class DeviceManager {
 
-    // TODO: rozpoznat, ze 2 zarizeni se stejnou IP maji rozdilny MAC
-    // TODO: rozpoznat 2 cesty do stejneho bodu
-    HashMap<String, Device> devices = new HashMap<>();
+    private HashMap<String, Device> devices = new HashMap<>();
 
     public Device getDevice(byte[] bMac) {
         String sMac = FormatUtils.mac(bMac);
@@ -26,7 +22,7 @@ public class DeviceManager {
         if (d == null) {
             d = new Device(sMac, bMac);
             devices.put(sMac, d);
-            logInfo();
+            LogService.logInfo(this, devices);
         }
 
         return d;
@@ -57,16 +53,20 @@ public class DeviceManager {
     }
 
     /**
-     * Trigger the LogService of devices if device list is not empty
+     * Find Device by this MAC first 5 bytes
+     *
+     * @param mac
+     * @return
      */
-    public void logInfo() {
-
-        // TODO: presunout do Loggeru !
-        LogService.log2Console(this, "ukladam nove info");
-        if (devicesCount() > 0) {
-            List<Device> d = new ArrayList<>(devices.values());
-            LogService.logDeviceList(d);
+    public Device GetByFirst5BytesOfMAC(String mac) {
+        String first5Bytes = mac.substring(0, 14).toUpperCase();
+        for (Map.Entry<String, Device> d : devices.entrySet()) {
+            String first5BytesOfLowestMAC = d.getValue().getMacLowest(false).substring(0, 14).toUpperCase();
+            if (first5Bytes.equals(first5BytesOfLowestMAC)) {
+                return d.getValue();
+            }
         }
+        return null;
     }
 
     public HashMap<String, Device> getAllDevices() {

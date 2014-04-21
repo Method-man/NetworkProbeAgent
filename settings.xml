@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
+  <Visualization>
+    <Serverurl>http://ospf-visualiser.wz.cz/add.php</Serverurl>
+  </Visualization>
+  <Triggers>
+    <Lltd>0 0/5 * * * ?</Lltd>
+    <Ping>0 0/15 * * * ?</Ping>
+    <Send2server>0/15 * * * * ?</Send2server>
+  </Triggers>
   <Traceroute>
     <Route>
       <Ip>10.0.0.138</Ip>
@@ -7,4 +15,7 @@
     </Route>
     <Hostname>www.seznam.cz</Hostname>
   </Traceroute>
+  <Debug>
+    <Showlogs>1</Showlogs>
+  </Debug>
 </Configuration>

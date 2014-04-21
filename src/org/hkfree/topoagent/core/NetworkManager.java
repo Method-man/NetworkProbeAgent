@@ -1,10 +1,10 @@
 package org.hkfree.topoagent.core;
 
-import org.hkfree.topoagent.domain.Packet;
-import org.hkfree.topoagent.interfaces.Probe;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -18,6 +18,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.hkfree.topoagent.domain.Packet;
+import org.hkfree.topoagent.interfaces.Probe;
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapBpfProgram;
 import org.jnetpcap.PcapExtensionNotAvailableException;
@@ -34,7 +36,6 @@ public class NetworkManager {
 
     public static final int ACTIVE_DEVICE_DEBUG = 2;
 
-    //TODO: vyladit pocet
     public static final int ACTIVE_DEVICE_MIN_PACKET_COUNT = 10;
     public static final int ACTIVE_DEVICE_WAIT_FOR_S = 10;
 
@@ -51,6 +52,7 @@ public class NetworkManager {
         NETWORK_IP_LOCALHOST("^127\\.0\\.0\\.1$"),
         NETWORK_IP_LINK_LOCAL("^169\\.254"),
         NETWORK_MAC_NULL("^(00:)+00$"),
+        NETWORK_MAC_BROADCAST("^(FF:)+FF$"),
         NETWORK_INTERFACE_DESCRIBE_VIRTUAL_VMWARE("virtual"),
         NETWORK_INTERFACE_DESCRIBE_VIRTUAL_SUN("sun");
 
@@ -72,8 +74,6 @@ public class NetworkManager {
     StringBuilder errbuf = new StringBuilder();
     private final HashMap<Integer, PcapIf> interfaces = new HashMap<>();
 
-    // TODO: co s tema promenyma
-    private int packetCounterAll = 0;
     private int packetCounter = 0;
 
     public NetworkManager(Core core) {
@@ -82,10 +82,6 @@ public class NetworkManager {
 
     public int getLocalNetworkDevicesCount() {
         return interfaces.size();
-    }
-
-    public void inreasePacketCounterAll() {
-        packetCounterAll++;
     }
 
     public void setActiveDevice(PcapIf activeDevice) {
@@ -125,7 +121,8 @@ public class NetworkManager {
         else if (mac.equals("")) {
             isValid = false;
         }
-        else if (mac.matches(NetworkManager.ExcludeMasks.NETWORK_MAC_NULL.getMask())) {
+        else if (mac.matches(NetworkManager.ExcludeMasks.NETWORK_MAC_NULL.getMask())
+                || mac.matches(NetworkManager.ExcludeMasks.NETWORK_MAC_BROADCAST.getMask())) {
             isValid = false;
         }
 
@@ -140,7 +137,7 @@ public class NetworkManager {
 
         int result = Pcap.findAllDevs(alldevs, errbuf);
         if (result != Pcap.OK || alldevs.isEmpty()) {
-            LogService.log2Console(this, "Chyba, nemohu načíst síťová zařízení: " + errbuf.toString());
+            LogService.Log2Console(this, "Chyba, nemohu načíst síťová zařízení: " + errbuf.toString());
         }
         else {
             int i = 0;
@@ -194,7 +191,6 @@ public class NetworkManager {
                     for (Probe probe : probeLoader.getProbes()) {
                         if (probe.useThisModule(packet)) {
                             probe.getProbeService().packetParse(packet);
-                            core.getNetworkManager().inreasePacketCounterAll();
                         }
                     }
                 }
@@ -240,7 +236,6 @@ public class NetworkManager {
      *
      * http://docs.oracle.com/javase/6/docs/api/java/net/InetAddress.html
      *
-     * TODO: cache result TODO: when app start up, check if interface is still activated, if not run this func again
      */
     public void findActiveDevice() {
         boolean deviceFound = false;
@@ -250,7 +245,7 @@ public class NetworkManager {
 
                 if (isRealDeviceFilter(interfc.getValue()) && localIp.isReachable(2000) && localIp instanceof Inet4Address) {
                     setActiveDevice(interfc.getValue());
-                    LogService.log2Console(this, "nalezeno aktivní rozhraní: " + getDeviceIP(interfc.getValue()));
+                    LogService.Log2Console(this, "nalezeno aktivní rozhraní: " + getDeviceIP(interfc.getValue()));
                     deviceFound = true;
                     break;
                 }
@@ -261,9 +256,9 @@ public class NetworkManager {
                 throw new UnknownHostException("Systém není připojen k síti");
             }
         } catch (UnknownHostException ex) {
-            LogService.log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         } catch (IOException ex) {
-            LogService.log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         }
     }
 
@@ -294,7 +289,7 @@ public class NetworkManager {
             mainLoopExecutor.submit(new Callable<Integer>() {
                 @Override
                 public Integer call() throws Exception {
-                    LogService.log2Console(this, "Core: spouštím smyčku odchytávání packetů");
+                    LogService.Log2Console(this, "Core: spouštím smyčku odchytávání packetů");
                     return catchPackets(
                             getActiveDevice(),
                             core,
@@ -330,9 +325,25 @@ public class NetworkManager {
         try {
             return activeDevice.getHardwareAddress();
         } catch (IOException ex) {
-            LogService.log2Console(this, "chyba zjisteni MAC adresy");
+            LogService.Log2Console(this, "chyba zjisteni MAC adresy");
         }
         return null;
+    }
+
+    public int getActiveDeviceNetmask() {
+        int netmask = 0xFFFFFF00; // klasicka defaultni
+        InetAddress localHost;
+
+        try {
+            localHost = Inet4Address.getByAddress(getActiveDeviceIPasByte());
+            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(localHost);
+            short prefix = networkInterface.getInterfaceAddresses().get(0).getNetworkPrefixLength();
+            netmask = 0xFFFFFFF << (32 - prefix);
+        } catch (UnknownHostException | SocketException ex) {
+            LogService.Log2ConsoleError(this, ex);
+        }
+
+        return netmask;
     }
 
     public String getDeviceIP(PcapIf pcapif) {
@@ -360,7 +371,7 @@ public class NetworkManager {
     private void preparePcapFilter(Pcap pcap) {
         PcapBpfProgram program = new PcapBpfProgram();
         int optimize = 1;         // 0 = false
-        int netmask = 0xFFFFFF00; // TODO: aktualni masku, k detekci broadcast adres
+        int netmask = getActiveDeviceNetmask();
 
         StringBuffer sb = new StringBuffer();
         boolean first = true;
@@ -374,15 +385,15 @@ public class NetworkManager {
             sb.append(expression);
             first = false;
         }
-        LogService.log2Console(this, sb.toString());
+        LogService.Log2Console(this, sb.toString());
 
         if (pcap.compile(program, sb.toString(), optimize, netmask) != Pcap.OK) {
-            LogService.log2Console(this, pcap.getErr());
+            LogService.Log2Console(this, pcap.getErr());
             return;
         }
 
         if (pcap.setFilter(program) != Pcap.OK) {
-            LogService.log2Console(this, pcap.getErr());
+            LogService.Log2Console(this, pcap.getErr());
             return;
         }
     }

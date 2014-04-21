@@ -16,7 +16,7 @@ public class ExpertService {
     }
 
     /**
-     * SET OF RULES
+     * SET OF NEGATIVE RULES
      */
     public void showNoNetworkConnection() {
         core.getTrayService().showMessage("Chyba 01!", "Žádné síťové připojení", TrayIcon.MessageType.ERROR);
@@ -28,6 +28,26 @@ public class ExpertService {
 
     public void showTracerouteNoRoute() {
         core.getTrayService().showMessage("Chyba 03!", "Defaultní brána není dostupná", TrayIcon.MessageType.ERROR);
+    }
+    
+    /**
+     * SET OF NEUTRAL RULES
+     */
+    
+    public void showTraceIsBad() {
+        core.getTrayService().showMessage("Varování 01!", "Detekován možný problém s průchodností sítě", TrayIcon.MessageType.WARNING);
+    }
+    
+    public void showNoPublicIpServiceAvailable() {
+        core.getTrayService().showMessage("Varování 02!", "Webová služba veřejné IP není dostupná", TrayIcon.MessageType.WARNING);
+    }
+    
+    /**
+     * SET OF POSITIVE RULES
+     */
+    
+    public void showTraceIsFeasible() {
+        core.getTrayService().showMessage("Informace", "Sít je průchodná", TrayIcon.MessageType.INFO);
     }
 
 }

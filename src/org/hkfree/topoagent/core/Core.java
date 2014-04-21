@@ -3,9 +3,15 @@
  */
 package org.hkfree.topoagent.core;
 
+import org.hkfree.topoagent.domain.ScheduleJobCrate;
+import org.hkfree.topoagent.module.AdapterSchedule;
 import org.hkfree.topoagent.module.AdapterService;
 import org.hkfree.topoagent.module.ExpertService;
+import org.hkfree.topoagent.module.NetBIOSService;
+import org.hkfree.topoagent.module.SystemService;
 import org.hkfree.topoagent.module.TrayService;
+import static org.quartz.CronScheduleBuilder.cronSchedule;
+import org.quartz.SchedulerException;
 
 /**
  *
@@ -20,14 +26,21 @@ public class Core {
     private AdapterService adapterService;
     private ExpertService expertService;
     private TrayService trayService;
+    private SystemService systemService;
+    private NetBIOSService netbiosService;
 
     public void init() {
         deviceManager = new DeviceManager();
-        adapterService = new AdapterService();
         expertService = new ExpertService(this);
+        systemService = new SystemService();
+        netbiosService = new NetBIOSService();
 
         network = new NetworkManager(this);
         network.loadNetworkInterfaces();
+        
+        // adapter service needs instance of network manager
+        adapterService = new AdapterService(this);
+        LogService.allowdebug = adapterService.isDebug();
 
         probeLoader = new ProbeLoader(this);
         probeLoader.initBeforeProbes();
@@ -39,6 +52,20 @@ public class Core {
         network.catchPacketsTrigger();
 
         probeLoader.initAfterProbes();
+        
+        // sending data to server
+        try {
+            getProbeLoader().schedulePrepare(
+                    new ScheduleJobCrate(
+                            AdapterSchedule.class,
+                            "job-adapter-export",
+                            "group-adapter",
+                            "trigger-adapter",
+                            "group-adapter",
+                            cronSchedule(getAdapterService().getCronSend2Server())));
+        } catch (SchedulerException ex) {
+            LogService.Log2ConsoleError(this, ex);
+        }
 
     }
 
@@ -85,6 +112,24 @@ public class Core {
      */
     public TrayService getTrayService() {
         return trayService;
+    }
+    
+    /**
+     * Get module - SystemService
+     *
+     * @return SystemService
+     */
+    public SystemService getSystemService() {
+        return systemService;
+    }
+    
+    /**
+     * Get module - NetBIOSService
+     *
+     * @return NetBIOSService
+     */
+    public NetBIOSService getNetBIOSService() {
+        return netbiosService;
     }
 
 }

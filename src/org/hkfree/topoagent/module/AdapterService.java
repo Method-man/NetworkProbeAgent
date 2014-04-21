@@ -1,23 +1,36 @@
 package org.hkfree.topoagent.module;
 
-import org.hkfree.topoagent.core.Core;
-import org.hkfree.topoagent.core.DeviceManager;
-import org.hkfree.topoagent.core.LogService;
-import org.hkfree.topoagent.core.NetworkManager;
-import org.hkfree.topoagent.domain.Device;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import org.hkfree.topoagent.core.Core;
+import org.hkfree.topoagent.core.LogService;
+import org.hkfree.topoagent.domain.Device;
+import org.hkfree.topoagent.domain.ScheduleJobCrate;
+import org.hkfree.topoagent.interfaces.Probe;
+import org.hkfree.topoagent.module.protocol.LltdProbeSchedule;
+import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.format.FormatUtils;
-
+import static org.quartz.CronScheduleBuilder.cronSchedule;
+import org.quartz.SchedulerException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -32,11 +45,34 @@ import org.xml.sax.SAXException;
  */
 public class AdapterService {
 
+    private Core core;
+
     private String tracerouteHostname = "";
     private List<String> tracerouteDefault = new ArrayList<>();
+    private TopologyCreatorService topologyCreator;
 
-    public AdapterService() {
+    private boolean debug = true;
+    private String serverXMLvisualisation = "";
+    private String cronLltd = "";
+    private String cronPing = "";
+    private String cronSend2Server = "";
+
+    public AdapterService(Core core) {
+        this.core = core;
+        topologyCreator = new TopologyCreatorService(this.core);
         serverXmlGetSettings();
+    }
+
+    public String getCronLltd() {
+        return cronLltd;
+    }
+
+    public String getCronPing() {
+        return cronPing;
+    }
+
+    public String getCronSend2Server() {
+        return cronSend2Server;
     }
 
     public String getTracerouteHostname() {
@@ -45,6 +81,14 @@ public class AdapterService {
 
     public List<String> getTracerouteDefault() {
         return tracerouteDefault;
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public String getServerXMLvisualisation() {
+        return serverXMLvisualisation;
     }
 
     /**
@@ -56,10 +100,17 @@ public class AdapterService {
         String xml;
         try {
             xml = prepareXML(c);
-            LogService.log2Console(this, xml);
-            LogService.log2xmlFile(xml, "export.xml");
-        } catch (ParserConfigurationException ex) {
-            LogService.log2ConsoleError(this, ex);
+            LogService.Log2xmlFile(xml, "export.xml");
+            
+            String param = URLEncoder.encode(xml.replaceAll("\n", ""), "UTF-8");
+            new URL(core.getAdapterService().getServerXMLvisualisation()+"?data="+param).openStream().close();
+            
+            LogService.Log2Console(this, "data odeslány na server");
+
+        } catch (ParserConfigurationException | MalformedURLException | UnsupportedEncodingException ex) {
+            LogService.Log2ConsoleError(this, ex);
+        } catch (IOException ex) {
+            LogService.Log2ConsoleError(this, ex);
         }
     }
 
@@ -76,15 +127,31 @@ public class AdapterService {
             Document doc = dBuilder.parse(fXmlFile);
             doc.getDocumentElement().normalize();
 
+            // traceroute
             tracerouteHostname = doc.getElementsByTagName("Hostname").item(0).getTextContent();
             NodeList nl = ((Element) doc.getElementsByTagName("Route").item(0)).getElementsByTagName("Ip");
             for (int i = 0; i < nl.getLength(); i++) {
                 tracerouteDefault.add(nl.item(i).getTextContent());
-                LogService.log2Console(this, "defaultni route ip " + i + " " + nl.item(i).getTextContent());
+                LogService.Log2Console(this, "defaultni route ip " + i + " " + nl.item(i).getTextContent());
             }
 
+            // debug
+            debug = doc.getElementsByTagName("Showlogs").item(0).getTextContent().equals("1");
+
+            // XML server visualisation
+            serverXMLvisualisation = doc.getElementsByTagName("Serverurl").item(0).getTextContent();
+
+            // cron LLTD
+            cronLltd = ((Element) doc.getElementsByTagName("Triggers").item(0)).getElementsByTagName("Lltd").item(0).getTextContent();
+
+            // cron PING
+            cronPing = ((Element) doc.getElementsByTagName("Triggers").item(0)).getElementsByTagName("Ping").item(0).getTextContent();
+
+            // cron send 2 server
+            cronSend2Server = ((Element) doc.getElementsByTagName("Triggers").item(0)).getElementsByTagName("Send2server").item(0).getTextContent();
+
         } catch (ParserConfigurationException | IOException | SAXException ex) {
-            LogService.log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         }
     }
 
@@ -95,31 +162,33 @@ public class AdapterService {
         // root elements
         Document doc = docBuilder.newDocument();
         Element lltd = doc.createElement("lltd");
-        String publicIP = "";
-        try {
-            publicIP = getPublicIP();
-        } catch (IOException ex) {
-            LogService.log2ConsoleError(this, ex);
-        }
-        lltd.setAttribute("publicIP", publicIP);
+        String publicIP = getPublicIP();
+        lltd.setAttribute("publicip", publicIP);
+        lltd.setAttribute("millis", String.valueOf(new Date().getTime()));
         doc.appendChild(lltd);
 
         // traceroute
         Element traceroute = doc.createElement("traceroute");
         lltd.appendChild(traceroute);
-        for (Entry<byte[], Integer> r : c.getDeviceManager().getGateway().getRoute2Internet().entrySet()) {
-            Element ip = doc.createElement("ip");
-            ip.appendChild(doc.createTextNode(FormatUtils.ip(r.getKey())));
-            traceroute.appendChild(ip);
+        if (c.getDeviceManager().getGateway() != null) {
+            for (Entry<byte[], Integer> r : c.getDeviceManager().getGateway().getRoute2Internet().entrySet()) {
+                Element ip = doc.createElement("ip");
+                ip.appendChild(doc.createTextNode(FormatUtils.ip(r.getKey())));
+                traceroute.appendChild(ip);
+            }
         }
 
         // devices
         for (Entry<String, Device> d : c.getDeviceManager().getAllDevices().entrySet()) {
             Element device = doc.createElement("device");
-            device.setAttribute("mask", d.getKey());
+            device.setAttribute("mask", d.getValue().getMacLowest(false));
 
             Element machineName = doc.createElement("machineName");
-            machineName.appendChild(doc.createTextNode(d.getValue().getInfo(Device.DEVICE_MACHINE_NAME)));
+            String deviceHostname = d.getValue().getInfo(Device.DEVICE_MACHINE_NAME);
+            if(deviceHostname == null || deviceHostname.equals("")) {
+                deviceHostname = core.getNetBIOSService().GetNetBIOSName(d.getValue().getIp());
+            }
+            machineName.appendChild(doc.createTextNode(deviceHostname));
             device.appendChild(machineName);
 
             Element ipv4 = doc.createElement("ipv4");
@@ -133,54 +202,24 @@ public class AdapterService {
             lltd.appendChild(device);
         }
 
-        relationMapper(doc, lltd, c.getDeviceManager(), c.getNetworkManager());
+        topologyCreator.relationMapper(doc, lltd);
 
         DOMImplementationLS domImplementation = (DOMImplementationLS) doc.getImplementation();
         LSSerializer lsSerializer = domImplementation.createLSSerializer();
         return lsSerializer.writeToString(doc);
     }
 
-    /**
-     * Make relations beetween devices for xml representation
-     *
-     * Example relation:
-     * <relation from="20:2b:c1:95:1a:10" to="14:49:e0:55:5b:7c">
-     * <medium>02</medium>
-     * </relation>
-     *
-     * @param rootElement
-     * @param devices
-     */
-    private void relationMapper(Document doc, Element rootElement, DeviceManager deviceManager, NetworkManager networkManager) {
-        Device gateway = deviceManager.getGateway();
-        for (Entry<String, Device> deviceEntry : deviceManager.getAllDevices().entrySet()) {
-            Device device = deviceEntry.getValue();
-            if (!device.isGateway()) { // TODO: zjistit zda se tam ma pridavat i gateway
-                String sMacFrom = device.getInfo(Device.DEVICE_BSSID);
-                String sMacTo = device.getMac();
-                // connect to default gateway instead of null or invalid mac
-                if (!networkManager.isValidMac(sMacFrom)) {
-                    sMacFrom = gateway.getMac();
-                }
-                Element relation = doc.createElement("relation");
-                relation.setAttribute("from", sMacFrom);
-                relation.setAttribute("to", sMacTo);
-
-                // TODO: proverit medium zda delame stejne jako u kolegy
-                Element medium = doc.createElement("medium");
-                medium.appendChild(doc.createTextNode(device.getInfo(Device.DEVICE_PHYSICAL_MEDIUM)));
-                relation.appendChild(medium);
-                rootElement.appendChild(relation);
-            }
+    private String getPublicIP() {
+        String publicIP = "";
+        try {
+            URL whatismyip = new URL("http://checkip.amazonaws.com");
+            BufferedReader in = new BufferedReader(new InputStreamReader(whatismyip.openStream()));
+            publicIP = in.readLine(); // vraci IP jako string
+            in.close();
+        } catch (NullPointerException | IOException ex) {
+            core.getExpertService().showNoPublicIpServiceAvailable();
+            LogService.Log2ConsoleError(this, ex);
         }
-
-    }
-
-    private String getPublicIP() throws IOException {
-        URL whatismyip = new URL("http://checkip.amazonaws.com");
-        BufferedReader in = new BufferedReader(new InputStreamReader(whatismyip.openStream()));
-        String publicIP = in.readLine(); // vraci IP jako string
-        in.close();
 
         return publicIP;
     }
