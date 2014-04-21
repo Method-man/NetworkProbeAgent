@@ -39,7 +39,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
     private final Core core;
 
     private int tracerouteTtl = 1;
-    private int tracerouteTimeoutSeconds = 15; // default traceroute timeout 4 s
+    private final int tracerouteTimeoutSeconds = 15; // default traceroute timeout 4 s
     private byte[] ip;
 
     public TracerouteProbeService(Core core, Probe probe) {
@@ -52,30 +52,35 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
         // function A - Obtain gateway MAC
         TracerouteProbe probeTraceroute = ((TracerouteProbe) probe);
         if (probeTraceroute.useThisModuleObtainGatewayMac(packet)) {
-
-            // TODO: presunout cely obsah do metody
-            Ethernet e = packet.getHeader(new Ethernet());
-            Device d = core.getDeviceManager().getDevice(e.source());
-            d.setIsGateway(true);
-            if (isInState(STATE_INITIAL)) {
-                setState(STATE_HAS_GATEWAY);
-            }
-
+            processGateway(packet);
         }
         // function B - Traceroute
         if (probeTraceroute.useThisModuleTraceroute(packet)) {
-            byte[] destination = ((Ip4) packet.getHeader(new Ip4())).source();
-            boolean requiredDestination = destination == getTracerouteHostTestIp();
-            int type = ((Icmp) packet.getHeader(new Icmp())).type();
-            if (type == IcmpType.TIME_EXCEEDED_ID && !requiredDestination) { // vyprselo TTL a neni to cilova destinace
-                tracerouteTtl++;
-                tracerouteSend();
-                addIp2RouteFromPacket(packet, destination);
-            }
-            else if (requiredDestination || type == IcmpType.ECHO_REPLY_ID) { // je to cilova destinace nebo odpovedel nalezeno
-                setState(STATE_TRACEROUTE_DONE);
-                addIp2RouteFromPacket(packet, destination);
-            }
+            processTraceroute(packet);
+        }
+    }
+
+    private void processGateway(JPacket packet) {
+        Ethernet e = packet.getHeader(new Ethernet());
+        Device d = core.getDeviceManager().getDevice(e.source());
+        d.setIsGateway(true);
+        if (isInState(STATE_INITIAL)) {
+            setState(STATE_HAS_GATEWAY);
+        }
+    }
+
+    private void processTraceroute(JPacket packet) {
+        byte[] destination = ((Ip4) packet.getHeader(new Ip4())).source();
+        boolean requiredDestination = destination == getTracerouteHostTestIp();
+        int type = ((Icmp) packet.getHeader(new Icmp())).type();
+        if (type == IcmpType.TIME_EXCEEDED_ID && !requiredDestination) { // vyprselo TTL a neni to cilova destinace
+            tracerouteTtl++;
+            tracerouteSend();
+            addIp2RouteFromPacket(packet, destination);
+        }
+        else if (requiredDestination || type == IcmpType.ECHO_REPLY_ID) { // je to cilova destinace nebo odpovedel nalezeno
+            setState(STATE_TRACEROUTE_DONE);
+            addIp2RouteFromPacket(packet, destination);
         }
     }
 
@@ -91,7 +96,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
             d.addRoute2internet(destination);
         }
         else {
-            LogService.log2Console(this, "pokus o pridani traceroute ip do null device");
+            LogService.Log2Console(this, "pokus o pridani traceroute ip do null device");
         }
     }
 
@@ -111,7 +116,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
             new URL("http://" + getTracerouteHostTestHostname()).openStream().close();
         } catch (IOException ex) {
             core.getExpertService().showRemoteHostUnavailable();
-            LogService.log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         }
     }
 
@@ -122,7 +127,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
 
         if ((!isInState(STATE_PROCESS_TRACEROUTE) || tracerouteTtl > 1)) {
             setState(STATE_PROCESS_TRACEROUTE);
-            LogService.log2Console(this, "odesilam traceroute hop " + tracerouteTtl);
+            LogService.Log2Console(this, "odesilam traceroute hop " + tracerouteTtl);
             try {
                 Device gateway = core.getDeviceManager().getGateway();
                 if (gateway != null) {
@@ -138,11 +143,11 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                     int state_icmp = Pcap.OK;
                     state_icmp += core.getNetworkManager().sendPacket(activeDevice, icmp);
                     if (state_icmp == Pcap.OK) {
-                        LogService.log2Console(probe.getModuleName(), "Traceroute Packet (hop " + icmp.timeToLive() + ") odeslán");
+                        LogService.Log2Console(probe.getModuleName(), "Traceroute Packet (hop " + icmp.timeToLive() + ") odeslán");
                     }
                 }
             } catch (UnknownHostException ex) {
-                LogService.log2ConsoleError(this, ex);
+                LogService.Log2ConsoleError(this, ex);
             }
         }
     }
@@ -175,11 +180,8 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                 this.state = STATE_INITIAL;
                 break;
         }
-        LogService.log2Console(this, "nastavuji stav " + this.state);
+        LogService.Log2Console(this, "nastavuji stav " + this.state);
         core.getProbeLoader().notifyAllModules();
-
-        // TODO: prozatim odesilam vzdy, potom se to bude odesialt pri jine prilezitosti
-        core.getAdapterService().serverXmlSend(core);
     }
 
     @Override
@@ -199,7 +201,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                 ip = new byte[4];
                 ip = InetAddress.getByName(getTracerouteHostTestHostname()).getAddress();
             } catch (UnknownHostException ex) {
-                LogService.log2ConsoleError(this, ex);
+                LogService.Log2ConsoleError(this, ex);
             }
         }
         return ip;
@@ -218,7 +220,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                 if (tracerouteTtl > 1) {
                     return; // traceroute je OK
                 }
-                LogService.log2Console(this, "traceroute bez odpovedi, nahrazuji defaultni cestou");
+                LogService.Log2Console(this, "traceroute bez odpovedi, nahrazuji defaultni cestou");
                 core.getExpertService().showTracerouteNoRoute();
                 try {
                     for (String sIp : core.getAdapterService().getTracerouteDefault()) {
@@ -227,7 +229,7 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                     }
                     setState(STATE_TRACEROUTE_DONE);
                 } catch (UnknownHostException ex) {
-                    LogService.log2ConsoleError(this, ex);
+                    LogService.Log2ConsoleError(this, ex);
                 }
             }
         }, tracerouteTimeoutSeconds, TimeUnit.SECONDS);

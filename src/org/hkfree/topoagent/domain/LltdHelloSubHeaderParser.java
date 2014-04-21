@@ -27,6 +27,7 @@ public class LltdHelloSubHeaderParser implements Parser {
     public static final byte TYPE_PERFOMANCE_COUNTER_FREQUENCY = 0x0A;
     public static final byte TYPE_LINK_SPEED = 0x0c;
     public static final byte TYPE_MACHINE_NAME = 0x0f;
+    public static final byte TYPE_802_11_PHYSICAL_MEDIUM = 0x15;
 
     public static final byte LEN_HOST_ID = 0x06;
     public static final byte LEN_CHARACTERISTICS = 0x02;
@@ -39,6 +40,7 @@ public class LltdHelloSubHeaderParser implements Parser {
     public static final byte LEN_MAXIMUM_OPERATIONAL_RATE = 0x02;
     public static final byte LEN_PERFOMANCE_COUNTER_FREQUENCY = 0x08;
     public static final byte LEN_LINK_SPEED = 0x04;
+    public static final byte LEN_802_11_PHYSICAL_MEDIUM = 0x01;
 
     byte[] headerData;
 
@@ -50,8 +52,10 @@ public class LltdHelloSubHeaderParser implements Parser {
 
     private String sMachineName = "";
 
+    private byte bCharacter = 0x00;
     private byte bPhysicalMedium = 0x00;
-    private byte bWirelessMode = 0x00;
+    private byte b80211physicalMedium = 0x00;
+    private byte bWirelessMode = 0x08;
 
     public LltdHelloSubHeaderParser(byte[] data) {
         this.headerData = data;
@@ -74,6 +78,43 @@ public class LltdHelloSubHeaderParser implements Parser {
      */
     public String getBSSID() {
         return FormatUtils.mac(bBSSID);
+    }
+
+    /**
+     * Get Characteristics of responder
+     * 
+     * @return String description
+     */
+    public String GetCharacteristics() {
+        String sCharacter = "";
+        if ((bCharacter & 0xff) > 1) {
+            /*
+             * P X F M L - - -
+             * P - public of NAT
+             * X - private of NAT
+             * F - full duplex
+             * M - has management web page
+             * L - loopback
+             */
+
+            if (((bCharacter >> 7) & 1) == 1) {
+                sCharacter += "public side of NAT, ";
+            }
+            if (((bCharacter >> 6) & 1) == 1) {
+                sCharacter += "private side of NAT, ";
+            }
+            if (((bCharacter >> 5) & 1) == 1) {
+                sCharacter += "is full duplex, ";
+            }
+            if (((bCharacter >> 4) & 1) == 1) {
+                sCharacter += "has web management, ";
+            }
+            if (((bCharacter >> 3) & 1) == 1) {
+                sCharacter += "is loopback, ";
+            }
+        }
+
+        return sCharacter;
     }
 
     /**
@@ -111,11 +152,53 @@ public class LltdHelloSubHeaderParser implements Parser {
             case 0x01:
                 sWirelessMode = "802.11 infrastructure režim";
                 break;
+            case 0x08:
+                sWirelessMode = " -- ";
+                break;
             default:
                 sWirelessMode = String.valueOf(bWirelessMode);
                 break;
         }
         return sWirelessMode;
+    }
+    
+    /**
+     * Returns x. element WIRELESS PHYSICAL MEDIUM
+     *
+     * @return
+     */
+    public String get80211PhysicalMedium() {
+        String s80211physicalMedium;
+        switch (b80211physicalMedium) {
+            case 0x00:
+                s80211physicalMedium = "unknown";
+                break;
+            case 0x01:
+                s80211physicalMedium = "FHSS 2.4 gigahertz (GHz)";
+                break;
+            case 0x02:
+                s80211physicalMedium = "DSSS 2.4 GHz";
+                break;
+            case 0x03:
+                s80211physicalMedium = "IR Baseband";
+                break;
+            case 0x04:
+                s80211physicalMedium = "OFDM 5 GHz";
+                break;
+            case 0x05:
+                s80211physicalMedium = "HRDSSS";
+                break;
+            case 0x06:
+                s80211physicalMedium = "ERP";
+                break;
+            case 0x07:
+                s80211physicalMedium = "Reserved for future use";
+                break;
+            default:
+                s80211physicalMedium = String.valueOf(b80211physicalMedium);
+                break;
+        }
+        return s80211physicalMedium;
     }
 
     /**
@@ -152,6 +235,10 @@ public class LltdHelloSubHeaderParser implements Parser {
     private void parseType(byte type, int pointer2data, byte length) {
         switch (type) {
             case TYPE_HOST_ID: {
+                /**
+                 * The Host ID attribute uniquely identifies the host on which the responder is running. All responders
+                 * MUST include this attribute in all Hello frames.
+                 */
                 bMac = Arrays.copyOfRange(headerData, pointer2data, pointer2data + length);
             }
             break;
@@ -160,7 +247,8 @@ public class LltdHelloSubHeaderParser implements Parser {
             }
             break;
             case TYPE_PHYSICAL_MEDIUM: {
-                bPhysicalMedium = headerData[pointer2data];
+                // cteme jen posledni dulezity byte
+                bPhysicalMedium = headerData[pointer2data + length - 1];
             }
             break;
             case TYPE_IPV4: {
@@ -180,15 +268,26 @@ public class LltdHelloSubHeaderParser implements Parser {
                 try {
                     sMachineName = new String(bMachineName, "UTF-16LE");
                 } catch (UnsupportedEncodingException ex) {
-                    LogService.log2ConsoleError(this, ex);
+                    LogService.Log2ConsoleError(this, ex);
                 }
             }
             break;
             case TYPE_CHARACTERISTICS: {
-                // TODO:
+                /**
+                 * The Characteristics attribute identifies various characteristics of the responder host and network
+                 * interface. This attribute is mandatory. All responders MUST include this attribute in all Hello
+                 * frames.
+                 */
+
+                bCharacter = headerData[pointer2data];
+
             }
             break;
             case TYPE_BSSID: {
+                /**
+                 * This field specifies the MAC address of the AP with which a wireless
+                 * responder's wireless network interface is associated.
+                 */
                 bBSSID = Arrays.copyOfRange(headerData, pointer2data, pointer2data + length);
             }
             break;
@@ -204,8 +303,12 @@ public class LltdHelloSubHeaderParser implements Parser {
                 // TODO:
             }
             break;
+            case TYPE_802_11_PHYSICAL_MEDIUM: {
+                b80211physicalMedium = headerData[pointer2data];
+            }
+            break;
             default: {
-                // LogService.log2Console(this, "neznamy typ");
+                // LogService.Log2Console(this, "neznamy typ");
             }
         }
     }

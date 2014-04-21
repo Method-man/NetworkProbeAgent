@@ -34,7 +34,7 @@ public class TrayService {
         try {
             initSystemTray();
         } catch (AWTException ex) {
-            LogService.log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         }
     }
 
@@ -53,7 +53,7 @@ public class TrayService {
 
     private void initSystemTray() throws AWTException {
         if (!SystemTray.isSupported()) {
-            LogService.log2Console(this, "SystemTray is not supported");
+            LogService.Log2Console(this, "SystemTray is not supported");
         }
         else {
             final PopupMenu popup = new PopupMenu();
@@ -62,7 +62,7 @@ public class TrayService {
             try {
                 img = ImageIO.read(new File("icon-16x16.png"));
             } catch (IOException e) {
-                LogService.log2Console(this, "SystemTray error reading image file");
+                LogService.Log2Console(this, "SystemTray error reading image file");
             }
 
             trayIcon = new TrayIcon(img, Language.APP_NAME);
@@ -90,7 +90,7 @@ public class TrayService {
             for (Probe p : core.getProbeLoader().getProbes()) {
                 CheckboxMenuItem cb = new CheckboxMenuItem(p.getModuleName());
                 cb.setState(true);
-                cb.setEnabled(false); // TODO: switch off modules
+                cb.setEnabled(false);
                 popup.add(cb);
             }
             popup.addSeparator();
@@ -125,9 +125,8 @@ public class TrayService {
         content.getLabelIpLocal().setText(core.getNetworkManager().getActiveDeviceIPasString());
         content.getLabelDevicesCount().setText(String.valueOf(core.getDeviceManager().devicesCount()));
 
-        // TODO: draw graph
         /**
-         * GRAPH
+         * GRAPH TODO: knihovna jung.jar
          */
         /*DirectedSparseGraph g = new DirectedSparseGraph();
          g.addVertex("Vertex1");

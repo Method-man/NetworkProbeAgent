@@ -38,7 +38,7 @@ public class LltdProbe extends Probe {
         try {
             LltdHeader.LLTD_ID = JRegistry.register(LltdHeader.class);
         } catch (RegistryHeaderErrors ex) {
-            LogService.log2ConsoleError(this, ex);
+            LogService.Log2ConsoleError(this, ex);
         }
     }
 
@@ -55,8 +55,7 @@ public class LltdProbe extends Probe {
     @Override
     public ScheduleJobCrate schedule() {
         return new ScheduleJobCrate(LltdProbeSchedule.class, "job-lltd", "group-lltd", "trigger-lltd", "group-lltd",
-                // cronSchedule("0 0/1 * * * ?") // kazdou minutu
-                cronSchedule("0/15 * * * * ?") // 15s
+                cronSchedule(core.getAdapterService().getCronLltd())
         );
     }
 

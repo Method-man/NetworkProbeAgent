@@ -42,7 +42,7 @@ public class ArpProbeService implements ProbeService {
             type = "ARP REPLY";
         }
 
-        LogService.log2Console(this, probe.getModuleName() + " module: " + type + ": "
+        LogService.Log2Console(this, probe.getModuleName() + " module: " + type + ": "
                 + FormatUtils.ip(arpHeader.spa()) + " to "
                 + FormatUtils.ip(arpHeader.tpa()));
 

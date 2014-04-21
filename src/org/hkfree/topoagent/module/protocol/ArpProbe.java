@@ -30,7 +30,8 @@ public class ArpProbe extends Probe {
 
     @Override
     public void initBefore() {
-
+        core.getSystemService().arpCacheDelete();
+        core.getSystemService().dnsCacheDelete();
     }
 
     @Override

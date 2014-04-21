@@ -5,6 +5,7 @@
  */
 package org.hkfree.topoagent.module.protocol;
 
+import java.util.ConcurrentModificationException;
 import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.core.LogService;
 import org.hkfree.topoagent.domain.LltdQdDiscoveryPacket;
@@ -12,6 +13,7 @@ import org.hkfree.topoagent.domain.LltdQdResetPacket;
 import org.hkfree.topoagent.interfaces.Probe;
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapIf;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -20,10 +22,11 @@ import org.quartz.JobExecutionException;
  *
  * @author Filip Valenta
  */
+@DisallowConcurrentExecution
 public class LltdProbeSchedule implements Job {
 
     @Override
-    public void execute(final JobExecutionContext jec) throws JobExecutionException {
+    public void execute(final JobExecutionContext jec) throws JobExecutionException, ConcurrentModificationException  {
         Core core = (Core) jec.getJobDetail().getJobDataMap().get("core");
         Probe probe = (Probe) jec.getJobDetail().getJobDataMap().get("probe");
 
@@ -37,7 +40,7 @@ public class LltdProbeSchedule implements Job {
             state_r += core.getNetworkManager().sendPacket(activeDevice, packet_r);
             state_r += core.getNetworkManager().sendPacket(activeDevice, packet_r);
             if (state_r == Pcap.OK) {
-                LogService.log2Console(probe.getModuleName(), "LLTD Reset QD Packet (3) odeslán");
+                LogService.Log2Console(probe.getModuleName(), "LLTD Reset QD Packet (3) odeslán");
             }
 
             LltdQdDiscoveryPacket packet_qd = new LltdQdDiscoveryPacket(core);
@@ -45,21 +48,9 @@ public class LltdProbeSchedule implements Job {
             int state_qd = Pcap.OK;
             state_qd += core.getNetworkManager().sendPacket(activeDevice, packet_qd);
             if (state_qd == Pcap.OK) {
-                LogService.log2Console(probe.getModuleName(), "LLTD Quick Discovery Packet (1) odeslán");
+                LogService.Log2Console(probe.getModuleName(), "LLTD Quick Discovery Packet (1) odeslán");
             }
-            
-            /*LltdQdResetPacket packet_r2 = new LltdQdResetPacket(core);
-            int state_r2 = Pcap.OK;
-            state_r2 += core.getNetworkManager().sendPacket(activeDevice, packet_r2);
-            state_r2 += core.getNetworkManager().sendPacket(activeDevice, packet_r2);
-            state_r2 += core.getNetworkManager().sendPacket(activeDevice, packet_r2);
-            if (state_r2 == Pcap.OK) {
-                LogService.log2Console(probe.getModuleName(), "LLTD Reset QD Packet (1) odeslán");
-            }*/
 
-        }
-        else {
-            core.getExpertService().showNoNetworkConnection();
         }
     }
 

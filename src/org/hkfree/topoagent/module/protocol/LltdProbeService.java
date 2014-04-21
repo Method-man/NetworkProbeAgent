@@ -1,7 +1,6 @@
 package org.hkfree.topoagent.module.protocol;
 
 import org.hkfree.topoagent.core.Core;
-import org.hkfree.topoagent.core.LogService;
 import org.hkfree.topoagent.interfaces.Probe;
 import org.hkfree.topoagent.interfaces.ProbeService;
 import org.hkfree.topoagent.domain.Device;
@@ -38,12 +37,6 @@ public class LltdProbeService implements ProbeService {
                 );
                 LltdHelloSubHeaderParser helloParser = new LltdHelloSubHeaderParser(subheader);
                 packetCompare(helloParser.getIpv4(), lltdHeader.source(), helloParser);
-                
-                
-                
-                LogService.log2Console(this, helloParser.getIpv4());
-                LogService.log2Console(this, String.valueOf(lltdHeader.source()));
-            
             }
             
         }
@@ -54,18 +47,12 @@ public class LltdProbeService implements ProbeService {
 
     }
 
-    // TODO: udelat privatni !!!
     @Override
     public void packetCompare(String ip, byte[] mac, Parser parser) {
         
-        LogService.log2Console(this, ip);
-        LogService.log2Console(this, String.valueOf(mac));
-        
         // core.getNetworkManager().isValidIp(ip) && 
         if (core.getNetworkManager().isValidMac(mac)) {
-            /**
-             * TODO: skutecne nastavit ? zkontrolovat jaky zaznam existuje a musi se shodovat
-             */
+            
             core.getDeviceManager().getDevice(mac).setIP(ip);
 
             LltdHelloSubHeaderParser p = (LltdHelloSubHeaderParser) parser;
@@ -77,11 +64,10 @@ public class LltdProbeService implements ProbeService {
             core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_IPV6, p.getIpv6());
             core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_MACHINE_NAME, p.getMachineName());
             core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_BSSID, p.getBSSID());
+            core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_CHARACTERISTICS, p.GetCharacteristics());
+            core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_802_11_PHYSICAL_MEDIUM, p.get80211PhysicalMedium());
 
             core.getProbeLoader().notifyAllModules();
-
-            // TODO: prozatim odesilame vzdy, potom se to ale bude odesilat jen pri presne prilezitosti
-            core.getAdapterService().serverXmlSend(core);
         }
     }
 

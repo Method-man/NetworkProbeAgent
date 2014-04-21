@@ -110,7 +110,6 @@ public class LltdHeader extends JHeader {
 
     @Dynamic(Field.Property.DESCRIPTION)
     public String typeDescription() {
-        // TODO: konst.
         return (type() == ETHERNET_HEADER_LLTD) ? "lltd" : null;
     }
 
