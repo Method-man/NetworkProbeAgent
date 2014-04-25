@@ -7,7 +7,6 @@ import org.hkfree.topoagent.domain.ScheduleJobCrate;
 import org.hkfree.topoagent.module.AdapterSchedule;
 import org.hkfree.topoagent.module.AdapterService;
 import org.hkfree.topoagent.module.ExpertService;
-import org.hkfree.topoagent.module.NetBIOSService;
 import org.hkfree.topoagent.module.SystemService;
 import org.hkfree.topoagent.module.TrayService;
 import static org.quartz.CronScheduleBuilder.cronSchedule;
@@ -27,13 +26,11 @@ public class Core {
     private ExpertService expertService;
     private TrayService trayService;
     private SystemService systemService;
-    private NetBIOSService netbiosService;
 
     public void init() {
         deviceManager = new DeviceManager();
         expertService = new ExpertService(this);
         systemService = new SystemService();
-        netbiosService = new NetBIOSService();
 
         network = new NetworkManager(this);
         network.loadNetworkInterfaces();
@@ -121,15 +118,6 @@ public class Core {
      */
     public SystemService getSystemService() {
         return systemService;
-    }
-    
-    /**
-     * Get module - NetBIOSService
-     *
-     * @return NetBIOSService
-     */
-    public NetBIOSService getNetBIOSService() {
-        return netbiosService;
     }
 
 }

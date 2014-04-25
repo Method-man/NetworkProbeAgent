@@ -1,8 +1,6 @@
 package org.hkfree.topoagent;
 
-import java.net.UnknownHostException;
 import java.util.ConcurrentModificationException;
-import jcifs.netbios.NbtAddress;
 import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.core.LogService;
 
@@ -10,9 +8,9 @@ import org.hkfree.topoagent.core.LogService;
  *
  * @author Filip Valenta
  */
-public class NetworkProbeAgent {
+public class TopoAgent {
     
-    public NetworkProbeAgent() {
+    public TopoAgent() {
         System.setProperty("log4j.configurationFile", "log4j2.xml");
         
         Core core = new Core();
@@ -25,7 +23,7 @@ public class NetworkProbeAgent {
      */
     public static void main(String[] args) {
         try {
-            new NetworkProbeAgent();
+            new TopoAgent();
         } catch (ConcurrentModificationException ex) {
             LogService.Log2ConsoleError("NetworkProbeAgent", ex);
         } catch(Exception ex) {

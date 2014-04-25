@@ -1,8 +1,10 @@
 package org.hkfree.topoagent.core;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -18,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.net.util.SubnetUtils;
 import org.hkfree.topoagent.domain.Packet;
 import org.hkfree.topoagent.interfaces.Probe;
 import org.jnetpcap.Pcap;
@@ -243,7 +246,12 @@ public class NetworkManager {
             for (final Map.Entry<Integer, PcapIf> interfc : getNetworkInterfaces().entrySet()) {
                 InetAddress localIp = InetAddress.getByAddress(interfc.getValue().getAddresses().get(0).getAddr().getData());
 
-                if (isRealDeviceFilter(interfc.getValue()) && localIp.isReachable(2000) && localIp instanceof Inet4Address) {
+                if (isRealDeviceFilter(interfc.getValue())
+                        && localIp.isReachable(2000)
+                        && localIp instanceof Inet4Address
+                        // rather check if there is no more connected ways (wifi and lan)
+                        && core.getSystemService().getActiveDeviceIP().equals(getDeviceIP(interfc.getValue()))) {
+
                     setActiveDevice(interfc.getValue());
                     LogService.Log2Console(this, "nalezeno aktivní rozhraní: " + getDeviceIP(interfc.getValue()));
                     deviceFound = true;
@@ -330,20 +338,12 @@ public class NetworkManager {
         return null;
     }
 
-    public int getActiveDeviceNetmask() {
-        int netmask = 0xFFFFFF00; // klasicka defaultni
-        InetAddress localHost;
-
-        try {
-            localHost = Inet4Address.getByAddress(getActiveDeviceIPasByte());
-            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(localHost);
-            short prefix = networkInterface.getInterfaceAddresses().get(0).getNetworkPrefixLength();
-            netmask = 0xFFFFFFF << (32 - prefix);
-        } catch (UnknownHostException | SocketException ex) {
-            LogService.Log2ConsoleError(this, ex);
-        }
-
-        return netmask;
+    public byte[] getActiveDeviceNetmaskAsByte() {
+        return getActiveDevice().getAddresses().get(0).getNetmask().getData();
+    }
+    
+    public int getActiveDeviceNetmaskAsInt() {
+        return new BigInteger(getActiveDeviceNetmaskAsByte()).intValue();
     }
 
     public String getDeviceIP(PcapIf pcapif) {
@@ -371,7 +371,7 @@ public class NetworkManager {
     private void preparePcapFilter(Pcap pcap) {
         PcapBpfProgram program = new PcapBpfProgram();
         int optimize = 1;         // 0 = false
-        int netmask = getActiveDeviceNetmask();
+        int netmask = getActiveDeviceNetmaskAsInt();
 
         StringBuffer sb = new StringBuffer();
         boolean first = true;
@@ -396,6 +396,10 @@ public class NetworkManager {
             LogService.Log2Console(this, pcap.getErr());
             return;
         }
+    }
+
+    public byte[] getMacAsByteArrayFromString(String mac) {
+        return FormatUtils.toByteArray(mac.replaceAll(":", ""));
     }
 
 }

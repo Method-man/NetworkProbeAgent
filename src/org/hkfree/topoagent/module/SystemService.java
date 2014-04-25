@@ -12,12 +12,17 @@ import org.hkfree.topoagent.core.LogService;
  */
 public class SystemService {
 
+    public static final String WIFI_DATA_BSSID = "BSSID";
+    public static final String WIFI_DATA_SSID = "SSID";
+    public static final String WIFI_DATA_NETWORK_TYPE = "Network type";
+    public static final String WIFI_DATA_TRANSMIT_RAT = "Transmit rate (Mbps)";
+
     /**
-     * Get wifi bssid of this computer from console output
+     * Get wifi data of this computer from console output
      *
      * @return
      */
-    public String getWlanPossibleBSSID() {
+    public String getWlanData(String datakey) {
         String line;
         String output = "";
         try {
@@ -31,7 +36,7 @@ public class SystemService {
                 if (splits.length > 1) {
                     String key = splits[0].trim();
                     String value = splits[1].trim();
-                    if (key.equals("BSSID")) {
+                    if (key.equals(datakey)) {
                         output = value;
                     }
                 }
@@ -41,6 +46,40 @@ public class SystemService {
             LogService.Log2ConsoleError(this, ex);
         }
         return output;
+    }
+
+    public String getActiveDeviceIP() {
+        String line;
+        String ip = "";
+        int actualMetrics = 500; // very high number
+        try {
+            Process p = Runtime.getRuntime().exec("route print");
+            try (BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                while ((line = input.readLine()) != null) {
+                    if (line.trim().equals("")) {
+                        continue;
+                    }
+                    // too much spaces
+                    String[] splits = line.trim().replaceAll("[ ]+", " ").split(" ");
+                    if (splits.length > 3) {
+                        // this is gateway, lets choose the lowest metrics
+                        if (splits[0].equals("0.0.0.0") && splits[1].equals("0.0.0.0")) {
+                            // String gateway = splits[2];
+                            String interfaceIp = splits[3];
+                            String metrics = splits[4];
+                            // this interface has lower metrics, use them
+                            if (actualMetrics > Integer.parseInt(metrics)) {
+                                ip = interfaceIp;
+                                actualMetrics = Integer.parseInt(metrics);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (IOException | NumberFormatException ex) {
+            LogService.Log2ConsoleError(this, ex);
+        }
+        return ip;
     }
 
     /**
@@ -65,7 +104,9 @@ public class SystemService {
 
             BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
             while ((line = input.readLine()) != null) {
-                if(line.trim().equals("")) continue;
+                if (line.trim().equals("")) {
+                    continue;
+                }
                 LogService.Log2Console(this, line.trim());
             }
         } catch (IOException ex) {

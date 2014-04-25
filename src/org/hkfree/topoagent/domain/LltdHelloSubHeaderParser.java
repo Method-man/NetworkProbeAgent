@@ -5,6 +5,8 @@ import org.hkfree.topoagent.core.LogService;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jnetpcap.packet.format.FormatUtils;
 
 /**
@@ -51,11 +53,12 @@ public class LltdHelloSubHeaderParser implements Parser {
     private byte[] bLinkSpeed = new byte[LEN_LINK_SPEED];
 
     private String sMachineName = "";
+    private String sSSID = "";
 
     private byte bCharacter = 0x00;
     private byte bPhysicalMedium = 0x00;
     private byte b80211physicalMedium = 0x00;
-    private byte bWirelessMode = 0x08;
+    private byte bWirelessMode = -0x01;
 
     public LltdHelloSubHeaderParser(byte[] data) {
         this.headerData = data;
@@ -81,8 +84,17 @@ public class LltdHelloSubHeaderParser implements Parser {
     }
 
     /**
+     * Returns x. element SSID - wifi name
+     *
+     * @return
+     */
+    public String getSSID() {
+        return sSSID.trim();
+    }
+
+    /**
      * Get Characteristics of responder
-     * 
+     *
      * @return String description
      */
     public String GetCharacteristics() {
@@ -126,13 +138,13 @@ public class LltdHelloSubHeaderParser implements Parser {
         String sPhysicalMedium;
         switch (bPhysicalMedium) {
             case 0x47:
-                sPhysicalMedium = "IEEE 802.11";
+                sPhysicalMedium = Device.CONNECTION_WIFI;
                 break;
             case 0x06:
                 sPhysicalMedium = "Ethernet";
                 break;
             default:
-                sPhysicalMedium = String.valueOf(bPhysicalMedium);
+                sPhysicalMedium = "Unknown";
                 break;
         }
         return sPhysicalMedium;
@@ -152,6 +164,9 @@ public class LltdHelloSubHeaderParser implements Parser {
             case 0x01:
                 sWirelessMode = "802.11 infrastructure režim";
                 break;
+            case 0x02:
+                sWirelessMode = "Automatic mode";
+                break;
             case 0x08:
                 sWirelessMode = " -- ";
                 break;
@@ -161,7 +176,7 @@ public class LltdHelloSubHeaderParser implements Parser {
         }
         return sWirelessMode;
     }
-    
+
     /**
      * Returns x. element WIRELESS PHYSICAL MEDIUM
      *
@@ -285,14 +300,15 @@ public class LltdHelloSubHeaderParser implements Parser {
             break;
             case TYPE_BSSID: {
                 /**
-                 * This field specifies the MAC address of the AP with which a wireless
-                 * responder's wireless network interface is associated.
+                 * This field specifies the MAC address of the AP with which a wireless responder's wireless network
+                 * interface is associated.
                  */
                 bBSSID = Arrays.copyOfRange(headerData, pointer2data, pointer2data + length);
             }
             break;
-            case TYPE_SSID: {
-                // TODO:
+            case TYPE_SSID:  {
+                byte[] bSSID = Arrays.copyOfRange(headerData, pointer2data, pointer2data + length);
+                sSSID = new String(bSSID);
             }
             break;
             case TYPE_MAXIMUM_OPERATIONAL_RATE: {

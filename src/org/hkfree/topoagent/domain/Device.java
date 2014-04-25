@@ -9,6 +9,8 @@ import org.jnetpcap.packet.format.FormatUtils;
  * @author Filip Valenta
  */
 public class Device {
+    
+    public static final String CONNECTION_WIFI = "IEEE 802.11";
 
     public static final String DEVICE_HOST_ID = "hostid";
     public static final String DEVICE_PHYSICAL_MEDIUM = "physicalmedium";
@@ -17,6 +19,7 @@ public class Device {
     public static final String DEVICE_LINK_SPEED = "linkspeed";
     public static final String DEVICE_MACHINE_NAME = "machinename";
     public static final String DEVICE_BSSID = "bssid";
+    public static final String DEVICE_SSID = "ssid";
     public static final String DEVICE_CHARACTERISTICS = "characteristics";
     public static final String DEVICE_802_11_PHYSICAL_MEDIUM = "80211physicalmedium";
 
@@ -50,7 +53,10 @@ public class Device {
      * @param val
      */
     public void setInfo(String pos, String val) {
-        info.put(pos, val);
+         // null a prazdne nevkladat !
+        if(val != null && !val.equals("")) {
+            info.put(pos, val);
+        }
     }
 
     public Device(String mac, byte[] bMac) {

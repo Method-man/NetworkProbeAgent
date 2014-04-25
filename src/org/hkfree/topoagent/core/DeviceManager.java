@@ -58,7 +58,7 @@ public class DeviceManager {
      * @param mac
      * @return
      */
-    public Device GetByFirst5BytesOfMAC(String mac) {
+    public Device getByFirst5BytesOfMAC(String mac) {
         String first5Bytes = mac.substring(0, 14).toUpperCase();
         for (Map.Entry<String, Device> d : devices.entrySet()) {
             String first5BytesOfLowestMAC = d.getValue().getMacLowest(false).substring(0, 14).toUpperCase();
@@ -71,6 +71,20 @@ public class DeviceManager {
 
     public HashMap<String, Device> getAllDevices() {
         return devices;
+    }
+    
+    /**
+     * Set SSID to AP
+     * Client connected to AP has SSID and BSSID, so it can bet set also to the AP/router
+     * 
+     * @param apBSSID
+     * @param apSSID 
+     */
+    public void setSSIDtoAP(String apBSSID, String apSSID) {
+        Device AP = getByFirst5BytesOfMAC(apBSSID);
+        if(AP != null) {
+            getDevice(AP.getMacAsByte()).setInfo(Device.DEVICE_SSID, apSSID);
+        }
     }
 
 }

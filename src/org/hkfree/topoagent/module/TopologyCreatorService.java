@@ -5,6 +5,7 @@ import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.core.DeviceManager;
 import org.hkfree.topoagent.core.NetworkManager;
 import org.hkfree.topoagent.domain.Device;
+import org.jnetpcap.packet.format.FormatUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -50,14 +51,12 @@ public class TopologyCreatorService {
                 relation.setAttribute("from", sMacFrom);
                 relation.setAttribute("to", sMacTo);
 
+                // melo by tu byl 80211 physical medium, ale to casto nic neobsahuje
                 Element medium = doc.createElement("medium");
-                /**
-                 * melo by tu byl 80211 physical medium, ale to nic neobsahuje String sMedium =
-                 * device.getInfo(Device.DEVICE_802_11_PHYSICAL_MEDIUM);
-                 */
                 String sMedium = device.getInfo(Device.DEVICE_PHYSICAL_MEDIUM);
                 if (sMedium == null || sMedium.equals("")) {
-                    sMedium = "unknown"; // 0 is unknown by specification
+                    // null is unknown by specification, for example ARP input
+                    sMedium = "Unknown";
                 }
                 medium.appendChild(doc.createTextNode(sMedium));
 
@@ -88,53 +87,43 @@ public class TopologyCreatorService {
         // standard connection from
         String sMacFrom = device.getInfo(Device.DEVICE_BSSID);
 
-        boolean isAccessPoint = matchHardwareAddress(
-                device.getInfo(Device.DEVICE_BSSID),
-                device.getInfo(Device.DEVICE_HOST_ID));
+        boolean isAccessPoint
+                = matchHardwareAddress(device.getInfo(Device.DEVICE_BSSID), device.getInfo(Device.DEVICE_HOST_ID))
+                || matchHardwareAddress(device.getInfo(Device.DEVICE_BSSID), device.getMac());
 
         if (isAccessPoint) { // connect to DEFAULT GATEWAY instead itself
             sMacFrom = gateway.getMacLowest(false);
         }
-        
+
         boolean getFromGateway = false;
 
-        // is LAN or undetected WLAN LLTD or invalid MAC
+        // is LAN or invalid MAC
         if (!networkManager.isValidMac(sMacFrom)) {
-            
-            // is possible to load it from system command and only for local PC !
-            if (device.getIp().equals(networkManager.getActiveDeviceIPasString())) {
-
-                String backupBSSID = core.getSystemService().getWlanPossibleBSSID();
-                if (!backupBSSID.equals("")) {
-                    Device d = deviceManager.GetByFirst5BytesOfMAC(backupBSSID);
-                    sMacFrom = d.getMacLowest(false).toUpperCase();
-                } else {
-                    getFromGateway = true;
-                }
-
-            }
-            else {
-                getFromGateway = true;
-            }
-
+            getFromGateway = true;
         }
         else { // MAC is OK, check if there is any possible lower
-            Device deviceFrom = deviceManager.GetByFirst5BytesOfMAC(sMacFrom);
-            if (deviceFrom == null) { // A HAH ! that device does not exist ! invalid BSSID
-                sMacFrom = gateway.getMacLowest(false);
+            Device deviceFrom = deviceManager.getByFirst5BytesOfMAC(sMacFrom);
+            if (deviceFrom == null) { // A HAH ! that device does not exist ! "invalid" unknown BSSID 
+                // ... try to create
+                // OR CALL SIMPLY THIS sMacFrom = gateway.getMacLowest(false);
+                byte[] bMac = core.getNetworkManager().getMacAsByteArrayFromString(sMacFrom);
+                Device newDevice = deviceManager.getDevice(bMac);
+                newDevice.setInfo(Device.DEVICE_SSID, device.getInfo(Device.DEVICE_SSID));
+                newDevice.setInfo(Device.DEVICE_BSSID, device.getInfo(Device.DEVICE_BSSID));
+                sMacFrom = newDevice.getMacLowest(false);
             }
             else {
                 sMacFrom = deviceFrom.getMacLowest(false);
             }
         }
-        
+
         // connect to DEFAULT GATEWAY
-        if(getFromGateway) {
-            if(gateway != null) {
+        if (getFromGateway) {
+            if (gateway != null) {
                 sMacFrom = gateway.getMacLowest(false);
             }
         }
-        
+
         return sMacFrom;
     }
 

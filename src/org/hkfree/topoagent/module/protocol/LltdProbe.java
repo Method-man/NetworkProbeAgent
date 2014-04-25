@@ -25,7 +25,7 @@ public class LltdProbe extends Probe {
 
     @Override
     public String getModuleName() {
-        return "LLTD packets";
+        return "LLTD probe";
     }
 
     @Override

@@ -38,7 +38,7 @@ public class LltdProbeService implements ProbeService {
                 LltdHelloSubHeaderParser helloParser = new LltdHelloSubHeaderParser(subheader);
                 packetCompare(helloParser.getIpv4(), lltdHeader.source(), helloParser);
             }
-            
+
         }
     }
 
@@ -49,10 +49,10 @@ public class LltdProbeService implements ProbeService {
 
     @Override
     public void packetCompare(String ip, byte[] mac, Parser parser) {
-        
+
         // core.getNetworkManager().isValidIp(ip) && 
         if (core.getNetworkManager().isValidMac(mac)) {
-            
+
             core.getDeviceManager().getDevice(mac).setIP(ip);
 
             LltdHelloSubHeaderParser p = (LltdHelloSubHeaderParser) parser;
@@ -63,9 +63,15 @@ public class LltdProbeService implements ProbeService {
             core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_WIRELESS_MODE, p.getWirelessMode());
             core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_IPV6, p.getIpv6());
             core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_MACHINE_NAME, p.getMachineName());
-            core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_BSSID, p.getBSSID());
             core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_CHARACTERISTICS, p.GetCharacteristics());
             core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_802_11_PHYSICAL_MEDIUM, p.get80211PhysicalMedium());
+
+            String ssid = p.getSSID();
+            String bssid = p.getBSSID();
+            core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_BSSID, bssid);
+            core.getDeviceManager().getDevice(mac).setInfo(Device.DEVICE_SSID, ssid);
+            
+            core.getDeviceManager().setSSIDtoAP(bssid, ssid);
 
             core.getProbeLoader().notifyAllModules();
         }

@@ -1,14 +1,10 @@
 package org.hkfree.topoagent.module;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -16,21 +12,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.hkfree.topoagent.core.Core;
 import org.hkfree.topoagent.core.LogService;
 import org.hkfree.topoagent.domain.Device;
-import org.hkfree.topoagent.domain.ScheduleJobCrate;
-import org.hkfree.topoagent.interfaces.Probe;
-import org.hkfree.topoagent.module.protocol.LltdProbeSchedule;
-import org.jnetpcap.packet.JPacket;
+import org.hkfree.topoagent.module.protocol.NetBIOSProbe;
+import org.hkfree.topoagent.module.protocol.NetBIOSProbeService;
 import org.jnetpcap.packet.format.FormatUtils;
-import static org.quartz.CronScheduleBuilder.cronSchedule;
-import org.quartz.SchedulerException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -55,6 +45,7 @@ public class AdapterService {
     private String serverXMLvisualisation = "";
     private String cronLltd = "";
     private String cronPing = "";
+    private String cronNetBIOS = "";
     private String cronSend2Server = "";
 
     public AdapterService(Core core) {
@@ -69,6 +60,10 @@ public class AdapterService {
 
     public String getCronPing() {
         return cronPing;
+    }
+
+    public String getCronNetBIOS() {
+        return cronNetBIOS;
     }
 
     public String getCronSend2Server() {
@@ -101,10 +96,10 @@ public class AdapterService {
         try {
             xml = prepareXML(c);
             LogService.Log2xmlFile(xml, "export.xml");
-            
+
             String param = URLEncoder.encode(xml.replaceAll("\n", ""), "UTF-8");
-            new URL(core.getAdapterService().getServerXMLvisualisation()+"?data="+param).openStream().close();
-            
+            new URL(core.getAdapterService().getServerXMLvisualisation() + "?data=" + param).openStream().close();
+
             LogService.Log2Console(this, "data odeslány na server");
 
         } catch (ParserConfigurationException | MalformedURLException | UnsupportedEncodingException ex) {
@@ -147,6 +142,9 @@ public class AdapterService {
             // cron PING
             cronPing = ((Element) doc.getElementsByTagName("Triggers").item(0)).getElementsByTagName("Ping").item(0).getTextContent();
 
+            // cron NetBIOS
+            cronNetBIOS = ((Element) doc.getElementsByTagName("Triggers").item(0)).getElementsByTagName("NetBIOS").item(0).getTextContent();
+
             // cron send 2 server
             cronSend2Server = ((Element) doc.getElementsByTagName("Triggers").item(0)).getElementsByTagName("Send2server").item(0).getTextContent();
 
@@ -183,10 +181,14 @@ public class AdapterService {
             Element device = doc.createElement("device");
             device.setAttribute("mask", d.getValue().getMacLowest(false));
 
+            // try to load data for local pc
+            loadDataFromWifi4LocalPC(d.getValue());
+
             Element machineName = doc.createElement("machineName");
             String deviceHostname = d.getValue().getInfo(Device.DEVICE_MACHINE_NAME);
-            if(deviceHostname == null || deviceHostname.equals("")) {
-                deviceHostname = core.getNetBIOSService().GetNetBIOSName(d.getValue().getIp());
+            if (checkNull(deviceHostname) && !checkNull(d.getValue().getIp())) {
+                NetBIOSProbe netbiosprobe = (NetBIOSProbe) core.getProbeLoader().getNetBIOSProbe();
+                deviceHostname = ((NetBIOSProbeService) netbiosprobe.getProbeService()).GetNetBIOSName(d.getValue().getIp());
             }
             machineName.appendChild(doc.createTextNode(deviceHostname));
             device.appendChild(machineName);
@@ -198,6 +200,42 @@ public class AdapterService {
             Element ipv6 = doc.createElement("ipv6");
             ipv6.appendChild(doc.createTextNode(d.getValue().getInfo(Device.DEVICE_IPV6)));
             device.appendChild(ipv6);
+
+            /**
+             * MACs and identifiers
+             */
+            Element identifiers = doc.createElement("identifiers");
+
+            if (!checkNull(d.getValue().getMac())) {
+                Element mac = doc.createElement("MAC");
+                mac.appendChild(doc.createTextNode(d.getValue().getMac()));
+                identifiers.appendChild(mac);
+            }
+            if (!checkNull(d.getValue().getInfo(Device.DEVICE_BSSID))) {
+                Element bssid = doc.createElement("BSSID");
+                bssid.appendChild(doc.createTextNode(d.getValue().getInfo(Device.DEVICE_BSSID)));
+                identifiers.appendChild(bssid);
+            }
+            if (!checkNull(d.getValue().getInfo(Device.DEVICE_SSID))) {
+                Element ssid = doc.createElement("SSID");
+                ssid.appendChild(doc.createTextNode(d.getValue().getInfo(Device.DEVICE_SSID)));
+                identifiers.appendChild(ssid);
+            }
+            if (!checkNull(d.getValue().getInfo(Device.DEVICE_HOST_ID))) {
+                Element hostid = doc.createElement("hostId");
+                hostid.appendChild(doc.createTextNode(d.getValue().getInfo(Device.DEVICE_HOST_ID)));
+                identifiers.appendChild(hostid);
+            }
+            if (!checkNull(d.getValue().getInfo(Device.DEVICE_LINK_SPEED))) {
+                Element linkspeed = doc.createElement("linkSpeed");
+                linkspeed.appendChild(doc.createTextNode(d.getValue().getInfo(Device.DEVICE_LINK_SPEED)));
+                identifiers.appendChild(linkspeed);
+            }
+
+            device.appendChild(identifiers);
+            /**
+             * MACs and identifiers END
+             */
 
             lltd.appendChild(device);
         }
@@ -222,6 +260,45 @@ public class AdapterService {
         }
 
         return publicIP;
+    }
+
+    /**
+     * Try to load data from netsh only for local PC connected to wifi
+     *
+     * @param device
+     */
+    private void loadDataFromWifi4LocalPC(Device device) {
+        if (device.getIp().equals(core.getNetworkManager().getActiveDeviceIPasString())) {
+
+            String bssid = core.getSystemService().getWlanData(SystemService.WIFI_DATA_BSSID);
+            String ssid = core.getSystemService().getWlanData(SystemService.WIFI_DATA_SSID);
+            String networkType = core.getSystemService().getWlanData(SystemService.WIFI_DATA_NETWORK_TYPE);
+            String transmit = core.getSystemService().getWlanData(SystemService.WIFI_DATA_TRANSMIT_RAT);
+
+            if (device.getInfo(Device.DEVICE_BSSID) == null || (device.getInfo(Device.DEVICE_BSSID).equals("") && !bssid.equals(""))) {
+                device.setInfo(Device.DEVICE_BSSID, bssid);
+                // have some data so is wifi connected
+                device.setInfo(Device.DEVICE_PHYSICAL_MEDIUM, Device.CONNECTION_WIFI);
+            }
+            if (device.getInfo(Device.DEVICE_SSID) == null || (device.getInfo(Device.DEVICE_SSID).equals("") && !ssid.equals(""))) {
+                device.setInfo(Device.DEVICE_SSID, ssid);
+            }
+            if (device.getInfo(Device.DEVICE_WIRELESS_MODE) == null || (device.getInfo(Device.DEVICE_WIRELESS_MODE).equals("") && !networkType.equals(""))) {
+                device.setInfo(Device.DEVICE_WIRELESS_MODE, networkType);
+            }
+            if (device.getInfo(Device.DEVICE_LINK_SPEED) == null || (device.getInfo(Device.DEVICE_LINK_SPEED).equals("") && !transmit.equals(""))) {
+                device.setInfo(Device.DEVICE_LINK_SPEED, transmit + " Mbit");
+            }
+
+            if (!bssid.equals("") && !ssid.equals("")) {
+                core.getDeviceManager().setSSIDtoAP(bssid, ssid);
+            }
+
+        }
+    }
+
+    private boolean checkNull(String deviceInfo) {
+        return deviceInfo == null || deviceInfo.equals("");
     }
 
 }

@@ -3,19 +3,22 @@
  */
 package org.hkfree.topoagent.core;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.hkfree.topoagent.domain.ScheduleJobCrate;
 import org.hkfree.topoagent.factory.ArpProbeFactory;
 import org.hkfree.topoagent.factory.LltdProbeFactory;
+import org.hkfree.topoagent.factory.NetBIOSFactory;
 import org.hkfree.topoagent.factory.PingProbeFactory;
 import org.hkfree.topoagent.factory.TracerouteProbeFactory;
 import org.hkfree.topoagent.interfaces.DeviceObserver;
 import org.hkfree.topoagent.interfaces.Probe;
 import org.hkfree.topoagent.interfaces.ProbeFactory;
-import org.hkfree.topoagent.domain.ScheduleJobCrate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.hkfree.topoagent.module.protocol.NetBIOSProbe;
 import org.quartz.CronTrigger;
+import static org.quartz.JobBuilder.newJob;
 import static org.quartz.JobBuilder.newJob;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -36,6 +39,8 @@ public class ProbeLoader {
 
     Scheduler scheduler = null;
 
+    NetBIOSProbe NetBIOS;
+
     public ProbeLoader(Core core) {
         try {
             scheduler = StdSchedulerFactory.getDefaultScheduler();
@@ -55,6 +60,13 @@ public class ProbeLoader {
         probes.add(pf.getProbe());
         pf = new LltdProbeFactory(core);
         probes.add(pf.getProbe());
+        pf = new NetBIOSFactory(core);
+        NetBIOS = (NetBIOSProbe) pf.getProbe();
+        probes.add(NetBIOS);
+    }
+
+    public NetBIOSProbe getNetBIOSProbe() {
+        return NetBIOS;
     }
 
     public List<Probe> getProbes() {
@@ -116,7 +128,7 @@ public class ProbeLoader {
         data.put("probe", probe);
         schedule(sjc, data);
     }
-    
+
     /**
      * Add scheduled event to scheduler
      *
@@ -128,7 +140,7 @@ public class ProbeLoader {
         data.put("core", core);
         schedule(sjc, data);
     }
-    
+
     private void schedule(ScheduleJobCrate sjc, Map data) throws SchedulerException {
         JobDetail job = newJob(sjc.getJobClass())
                 .usingJobData(new JobDataMap(data))

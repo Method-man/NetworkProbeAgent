@@ -142,7 +142,7 @@ public class PingProbeService extends Stateful implements ProbeService, DeviceOb
     public boolean areAllHopsOk() {
         boolean allOk = true;
         for (Map.Entry<byte[], Integer> ip : core.getDeviceManager().getGateway().getRoute2Internet().entrySet()) {
-            if (ip.getValue() < PING_HOP_TEST_COUNT) {
+            if (ip.getValue() == 0) {
                 allOk = false;
             }
         }
