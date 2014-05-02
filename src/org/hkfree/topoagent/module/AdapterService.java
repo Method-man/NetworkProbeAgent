@@ -180,6 +180,9 @@ public class AdapterService {
         for (Entry<String, Device> d : c.getDeviceManager().getAllDevices().entrySet()) {
             Element device = doc.createElement("device");
             device.setAttribute("mask", d.getValue().getMacLowest(false));
+            if(d.getValue().isGateway()) {
+                device.setAttribute("isgateway", "true");
+            }
 
             // try to load data for local pc
             loadDataFromWifi4LocalPC(d.getValue());
@@ -197,9 +200,11 @@ public class AdapterService {
             ipv4.appendChild(doc.createTextNode(d.getValue().getIp()));
             device.appendChild(ipv4);
 
-            Element ipv6 = doc.createElement("ipv6");
-            ipv6.appendChild(doc.createTextNode(d.getValue().getInfo(Device.DEVICE_IPV6)));
-            device.appendChild(ipv6);
+            if (!checkNull(d.getValue().getInfo(Device.DEVICE_IPV6))) {
+                Element ipv6 = doc.createElement("ipv6");
+                ipv6.appendChild(doc.createTextNode(d.getValue().getInfo(Device.DEVICE_IPV6)));
+                device.appendChild(ipv6);
+            }
 
             /**
              * MACs and identifiers

@@ -19,9 +19,13 @@ import org.jnetpcap.protocol.network.Ip4;
 public class IcmpPacket extends Packet {
 
     public static final int PACKET_ICMP_SIZE = 74;
+    
+    public static final int PACKET_HEADER_ICMP_IDENTIFIER = 5;
+    public static final int PACKET_HEADER_ICMP_SEQUENCE_NUMBER = 7;
 
     private Ethernet ethernetHeader;
     private Ip4 ip4;
+    private Icmp icmpHeader;
 
     public IcmpPacket(Core c) throws UnknownHostException {
         super(Ip4.ID, new byte[PACKET_ICMP_SIZE]);
@@ -38,10 +42,9 @@ public class IcmpPacket extends Packet {
         ip4.length(PACKET_ICMP_SIZE - ethernetHeader.size());
 
         this.scan(JProtocol.ETHERNET_ID);
-        Icmp icmpHeader = getHeader(new Icmp());
+        icmpHeader = getHeader(new Icmp());
         icmpHeader.type(Icmp.IcmpType.ECHO_REQUEST_ID);
         icmpHeader.code(0x00);
-        icmpHeader.setUByte(7, 0x64);
 
         this.recalculateAllChecksums();
 
@@ -70,6 +73,14 @@ public class IcmpPacket extends Packet {
 
     public int timeToLive() {
         return ip4.ttl();
+    }
+
+    public void sequenceNumber(int sequence) {
+        icmpHeader.setUByte(PACKET_HEADER_ICMP_SEQUENCE_NUMBER, sequence);
+    }
+
+    public void identifier(int id) {
+        icmpHeader.setUByte(PACKET_HEADER_ICMP_IDENTIFIER, id);
     }
 
 }

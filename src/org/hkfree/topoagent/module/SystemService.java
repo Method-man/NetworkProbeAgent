@@ -61,7 +61,7 @@ public class SystemService {
                     }
                     // too much spaces
                     String[] splits = line.trim().replaceAll("[ ]+", " ").split(" ");
-                    if (splits.length > 3) {
+                    if (splits.length > 4) {
                         // this is gateway, lets choose the lowest metrics
                         if (splits[0].equals("0.0.0.0") && splits[1].equals("0.0.0.0")) {
                             // String gateway = splits[2];

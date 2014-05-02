@@ -1,6 +1,7 @@
 package org.hkfree.topoagent.domain;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.jnetpcap.packet.format.FormatUtils;
 
@@ -29,7 +30,8 @@ public class Device {
     private String mac = "";
     private byte[] bMac = new byte[6];
     private boolean isGateway = false;
-    private HashMap<byte[], Integer> route2internet = new HashMap<>();
+    LinkedHashMap<byte[], Integer> route2internet = new LinkedHashMap<>();
+    // private HashMap<byte[], Integer> route2internet = new HashMap<>();
     private HashMap<String, String> info = new HashMap<>();
 
     /**

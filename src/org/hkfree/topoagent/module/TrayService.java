@@ -25,10 +25,14 @@ import org.hkfree.topoagent.view.Status;
  * @author Filip Valenta
  */
 public class TrayService {
-
+    
     private Core core;
     private TrayIcon trayIcon;
-
+    
+    private BufferedImage imgOk = null;
+    private BufferedImage imgWarning = null;
+    private BufferedImage imgError = null;
+    
     public TrayService(Core core) {
         this.core = core;
         try {
@@ -49,25 +53,27 @@ public class TrayService {
      */
     public void showMessage(String title, String content, TrayIcon.MessageType type) {
         trayIcon.displayMessage(title, content, type);
+        trayIcon.setToolTip(Language.APP_NAME + " - " + content);
     }
-
+    
     private void initSystemTray() throws AWTException {
         if (!SystemTray.isSupported()) {
             LogService.Log2Console(this, "SystemTray is not supported");
         }
         else {
             final PopupMenu popup = new PopupMenu();
-
-            BufferedImage img = null;
+            
             try {
-                img = ImageIO.read(new File("icon-16x16.png"));
+                imgOk = ImageIO.read(new File("icon-16x16.png"));
+                imgWarning = ImageIO.read(new File("icon-16x16-warning.png"));
+                imgError = ImageIO.read(new File("icon-16x16-error.png"));
             } catch (IOException e) {
                 LogService.Log2Console(this, "SystemTray error reading image file");
             }
-
-            trayIcon = new TrayIcon(img, Language.APP_NAME);
+            
+            trayIcon = new TrayIcon(imgOk, Language.APP_NAME);
             SystemTray tray = SystemTray.getSystemTray();
-
+            
             MenuItem itemAbout = new MenuItem(Language.TITLE_ABOUT);
             itemAbout.addActionListener(new ActionListener() {
                 @Override
@@ -76,7 +82,7 @@ public class TrayService {
                 }
             });
             popup.add(itemAbout);
-
+            
             MenuItem itemStatus = new MenuItem(Language.TITLE_STATUS);
             itemStatus.addActionListener(new ActionListener() {
                 @Override
@@ -85,7 +91,7 @@ public class TrayService {
                 }
             });
             popup.add(itemStatus);
-
+            
             popup.addSeparator();
             for (Probe p : core.getProbeLoader().getProbes()) {
                 CheckboxMenuItem cb = new CheckboxMenuItem(p.getModuleName());
@@ -94,7 +100,7 @@ public class TrayService {
                 popup.add(cb);
             }
             popup.addSeparator();
-
+            
             MenuItem exitItem = new MenuItem("Vypnout do restartu");
             exitItem.addActionListener(new ActionListener() {
                 @Override
@@ -103,24 +109,24 @@ public class TrayService {
                 }
             });
             popup.add(exitItem);
-
+            
             trayIcon.setPopupMenu(popup);
-
+            
             tray.add(trayIcon);
         }
     }
-
+    
     private void showWindowAbout(String title) {
         JFrame about = new JFrame(title);
         about.add(new About());
         about.pack();
         about.setVisible(true);
     }
-
+    
     private void showWindowStatus(String title) {
         JFrame about = new JFrame(title);
         Status content = new Status();
-
+        
         content.getlabelInterfacesCount().setText(String.valueOf(core.getNetworkManager().getLocalNetworkDevicesCount()));
         content.getLabelIpLocal().setText(core.getNetworkManager().getActiveDeviceIPasString());
         content.getLabelDevicesCount().setText(String.valueOf(core.getDeviceManager().devicesCount()));
@@ -146,7 +152,19 @@ public class TrayService {
         about.add(content);
         about.pack();
         about.setVisible(true);
-
+        
     }
-
+    
+    public void setImageOK() {
+        trayIcon.setImage(imgOk);
+    }
+    
+    public void setImageWarning() {
+        trayIcon.setImage(imgWarning);
+    }
+    
+    public void setImageError() {
+        trayIcon.setImage(imgError);
+    }
+    
 }

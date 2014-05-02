@@ -1,18 +1,19 @@
 package org.hkfree.topoagent.core;
 
-import org.hkfree.topoagent.domain.Device;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.hkfree.topoagent.domain.Device;
 import org.jnetpcap.packet.JPacket;
 import org.jnetpcap.packet.format.FormatUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 /**
  * Static access to logable outputs
@@ -73,6 +74,7 @@ public class LogService {
     public static void Log2ConsoleError(Object object, Exception exceptionMessage) {
         Logger log = LogManager.getLogger(caller(object));
         log.error(exceptionMessage.getMessage());
+        exceptionMessage.printStackTrace(System.out);
     }
 
     /**

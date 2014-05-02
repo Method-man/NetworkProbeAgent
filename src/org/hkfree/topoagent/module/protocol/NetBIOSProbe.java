@@ -42,6 +42,10 @@ public class NetBIOSProbe extends Probe {
                 cronSchedule(core.getAdapterService().getCronNetBIOS())
         );
     }
+    
+    public String getTcpdumpFilter() {
+        return "";
+    }
 
 
 }

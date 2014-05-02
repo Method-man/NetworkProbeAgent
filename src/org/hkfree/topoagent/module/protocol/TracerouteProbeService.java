@@ -39,6 +39,8 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
     private final Core core;
 
     private int tracerouteTtl = 1;
+    private int sequenceNumber = 1;
+    private final int icmpIdentifier = 0x05;
     private final int tracerouteTimeoutSeconds = 15; // default traceroute timeout 4 s
     private byte[] ip;
 
@@ -70,15 +72,39 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
     }
 
     private void processTraceroute(JPacket packet) {
+
         byte[] destination = ((Ip4) packet.getHeader(new Ip4())).source();
         boolean requiredDestination = destination == getTracerouteHostTestIp();
-        int type = ((Icmp) packet.getHeader(new Icmp())).type();
+        Icmp icmpHeader = (Icmp) packet.getHeader(new Icmp());
+        int type = icmpHeader.type();
+
+        // tento packet zrejme nepatri do mapovani, pravdepodobne jej odesila jina sluzba/program systemu
+        /**
+         * bohuzel traceroute pri exceeded time nevraci zpet sequence ani identifier
+         */
+        /*if (icmpIdentifier != icmpHeader.getUByte(IcmpPacket.PACKET_HEADER_ICMP_IDENTIFIER)) {
+            LogService.Log2Console(this, "prijat packet ktery ma jiny identifikator");
+            LogService.Log2Console(this, String.valueOf(icmpHeader.getUByte(IcmpPacket.PACKET_HEADER_ICMP_IDENTIFIER)));
+            return;
+        }*/
+
+        // tento packet obsahuje jine sequence number nez je prave ocekavano, nechceme
+        /*if (sequenceNumber != icmpHeader.getUByte(IcmpPacket.PACKET_HEADER_ICMP_SEQUENCE_NUMBER)) {
+            LogService.Log2Console(this, "prijat packet ktery ma neplatne sequence number");
+            LogService.Log2Console(this, String.valueOf(icmpHeader.getUByte(IcmpPacket.PACKET_HEADER_ICMP_SEQUENCE_NUMBER)));
+            return;
+        }*/
+
         if (type == IcmpType.TIME_EXCEEDED_ID && !requiredDestination) { // vyprselo TTL a neni to cilova destinace
             tracerouteTtl++;
+            sequenceNumber++;
             tracerouteSend();
             addIp2RouteFromPacket(packet, destination);
         }
-        else if (requiredDestination || type == IcmpType.ECHO_REPLY_ID) { // je to cilova destinace nebo odpovedel nalezeno
+        else if (type == IcmpType.DESTINATION_UNREACHABLE_ID && !requiredDestination) {
+            // unused
+        }
+        else if (type == IcmpType.ECHO_REPLY_ID || requiredDestination) { // je to cilova destinace nebo odpovedel nalezeno
             setState(STATE_TRACEROUTE_DONE);
             addIp2RouteFromPacket(packet, destination);
         }
@@ -138,6 +164,8 @@ public class TracerouteProbeService extends Stateful implements ProbeService, De
                     icmp.ipSource(core.getNetworkManager().getActiveDeviceIPasByte());
                     icmp.ipDestination(getTracerouteHostTestIp());
                     icmp.timeToLive(tracerouteTtl);
+                    icmp.sequenceNumber(sequenceNumber);
+                    icmp.identifier(icmpIdentifier);
                     icmp.recalculateAllChecksums();
 
                     int state_icmp = Pcap.OK;

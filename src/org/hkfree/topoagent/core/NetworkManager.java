@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -20,7 +17,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.net.util.SubnetUtils;
 import org.hkfree.topoagent.domain.Packet;
 import org.hkfree.topoagent.interfaces.Probe;
 import org.jnetpcap.Pcap;
@@ -339,6 +335,7 @@ public class NetworkManager {
     }
 
     public byte[] getActiveDeviceNetmaskAsByte() {
+        LogService.Log2Console(this, String.valueOf(getActiveDevice().getAddresses().get(0).getNetmask()));
         return getActiveDevice().getAddresses().get(0).getNetmask().getData();
     }
     
